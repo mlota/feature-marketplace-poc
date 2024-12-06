@@ -8,7 +8,7 @@
 			"version": "1.0.0",
 			"files": [
 				{
-					"path": "feature1/classes/Feature1.cls",
+					"path": "content/feature1/classes/Feature1.cls",
 					"type": "class"
 				}
 			]
@@ -21,7 +21,7 @@
 			"version": "1.0.0",
 			"files": [
 				{
-					"path": "feature2/classes/Feature2.cls",
+					"path": "content/feature2/classes/Feature2.cls",
 					"type": "class"
 				}
 			]

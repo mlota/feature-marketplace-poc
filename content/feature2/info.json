@@ -6,7 +6,7 @@
 	"version": "1.0.0",
 	"files": [
 		{
-			"path": "feature2/classes/Feature2.cls",
+			"path": "content/feature2/classes/Feature2.cls",
 			"type": "class"
 		}
 	]
