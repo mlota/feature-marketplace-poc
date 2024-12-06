@@ -1,0 +1,13 @@
+{
+	"id": "e7b8a9d4-3c5b-4d2b-8f8b-2f8b8f8b8f8b",
+	"name": "feature2",
+	"label": "Feature 2",
+	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+	"version": "1.0.0",
+	"files": [
+		{
+			"path": "feature2/classes/Feature2.cls",
+			"type": "class"
+		}
+	]
+}
