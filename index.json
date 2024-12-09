@@ -36,6 +36,10 @@
 				{
 					"path": "content/feature3/classes/Feature3.cls",
 					"type": "class"
+				},
+        {
+					"path": "content/feature3/feature3.zip",
+					"type": "package"
 				}
 			]
 		}
