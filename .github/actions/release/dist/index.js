@@ -262,6 +262,15 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     yield zipFolder(featurePath, path.join(featurePath, 'dist', 'install.zip'));
     console.log('featurePath', featurePath);
     console.log(path.join(featurePath, 'package.xml'));
+    let exists = false;
+    try {
+        yield fs_1.promises.access(path.join(featurePath, 'package.xml'));
+        exists = true;
+    }
+    catch (ex) {
+        exists = false;
+    }
+    console.log('Does file exist?', exists);
     // Remove the temporary package.xml file
     yield fs_1.promises.unlink(path.join(featurePath, 'package.xml'));
 });

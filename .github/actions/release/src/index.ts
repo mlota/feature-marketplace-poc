@@ -276,6 +276,15 @@ const createInstallationZip = async (featurePath: string): Promise<void> => {
   console.log('featurePath', featurePath);
   console.log(path.join(featurePath, 'package.xml'));
 
+  let exists = false;
+  try {
+    await fsPromises.access(path.join(featurePath, 'package.xml'));
+    exists = true;
+  } catch (ex) {
+    exists = false;
+  }
+  console.log('Does file exist?', exists);
+
   // Remove the temporary package.xml file
   await fsPromises.unlink(path.join(featurePath, 'package.xml'));
 };
