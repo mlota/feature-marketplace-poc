@@ -178,7 +178,7 @@ const createPackageXmlContent = (types, version) => {
 
     return Promise.resolve(createPackageXmlContent(types, '62.0'));
 }; */
-const createPackageXml = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
+const createPackageXml = (featurePath_1, ...args_1) => __awaiter(void 0, [featurePath_1, ...args_1], void 0, function* (featurePath, destructive = false) {
     const folders = yield getSubdirectories(featurePath);
     const types = {};
     for (const folder of folders) {
@@ -191,11 +191,10 @@ const createPackageXml = (featurePath) => __awaiter(void 0, void 0, void 0, func
                 .map(entry => path.parse(entry.name).name);
         }
     }
-    const packageXml = createPackageXmlContent(types, API_VERSION);
-    const destructiveChangesXml = createPackageXmlContent(types);
-    core.info(`packageXml: ${packageXml}`);
-    core.info(`destructiveChangesXml: ${destructiveChangesXml}`);
-    const packageXmlPath = path.join(featurePath, 'package.xml');
+    const packageXml = createPackageXmlContent(types, !destructive ? API_VERSION : undefined);
+    const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
+    core.info(`${fileName}: ${packageXml}`);
+    const packageXmlPath = path.join(featurePath, fileName);
     yield fs_1.promises.writeFile(packageXmlPath, packageXml);
 });
 const hasPendingChanges = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -251,6 +250,61 @@ const captureError = (ex, detailedPrefix) => {
     const errMsg = ex instanceof Error ? ex.message : 'Unknown error';
     errors.push(detailedPrefix ? `${detailedPrefix}: ${errMsg}` : `Error: ${errMsg}`);
 };
+const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
+    // Create the package.xml file
+    yield createPackageXml(featurePath);
+    // Ensure the dist folder exists
+    const distPath = path.join(featurePath, 'dist');
+    yield fs_1.promises.mkdir(distPath, { recursive: true });
+    // Zip the contents of the feature folder (including package.xml) and save
+    // it to the dist folder
+    yield zipFolder(featurePath, path.join(featurePath, 'dist', 'install.zip'));
+    // Remove the temporary package.xml file
+    yield fs_1.promises.unlink(path.join(featurePath, 'package.xml'));
+});
+const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
+    // Create the package.xml file
+    yield createPackageXml(featurePath, true);
+    // Ensure the dist folder exists
+    const distPath = path.join(featurePath, 'dist');
+    yield fs_1.promises.mkdir(distPath, { recursive: true });
+    // Zip the contents of the feature folder (including package.xml) and save
+    // it to the dist folder
+    /* await zipFolder(
+    featurePath,
+    path.join(featurePath, 'dist', 'install.zip'),
+  ); */
+    // Create a zip file containing just the package.xml and destructiveChanges.xml files
+    const output = fs.createWriteStream(path.join(distPath, 'uninstall.zip'));
+    const archive = (0, archiver_1.default)('zip', {
+        zlib: { level: 9 }, // Sets the compression level
+    });
+    return new Promise((resolve, reject) => {
+        output.on('close', () => {
+            console.log(`Archive created successfully, total bytes: ${archive.pointer()}`);
+            resolve();
+        });
+        archive.on('error', err => {
+            reject(err);
+        });
+        archive.pipe(output);
+        // Append the package.xml and destructiveChanges.xml files to the archive
+        archive.file(path.join(featurePath, 'package.xml'), {
+            name: 'package.xml',
+        });
+        archive.file(path.join(featurePath, 'destructiveChanges.xml'), {
+            name: 'destructiveChanges.xml',
+        });
+        archive.finalize();
+    }).then(() => __awaiter(void 0, void 0, void 0, function* () {
+        // Remove the temporary xml files
+        yield fs_1.promises.unlink(path.join(featurePath, 'package.xml'));
+        yield fs_1.promises.unlink(path.join(featurePath, 'destructiveChanges.xml'));
+    }));
+    /* // Remove the temporary xml files
+    await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+    await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml')); */
+});
 const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, function* () {
     // Get a list of each of the child folders under features
     const features = yield fs_1.promises.readdir(contentDir);
@@ -273,14 +327,21 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
             version: parsed.version,
             files: parseFilePaths(files).map(file => path.relative(featurePath, file)),
         });
-        // Create the package.xml file
-        yield createPackageXml(featurePath);
+        /* // Create the package.xml file
+        await createPackageXml(featurePath);
+
         // Ensure the dist folder exists
         const distPath = path.join(featurePath, 'dist');
-        yield fs_1.promises.mkdir(distPath, { recursive: true });
+        await fsPromises.mkdir(distPath, { recursive: true });
+
         // Zip the contents of the feature folder (including package.xml) and save
         // it to the dist folder
-        yield zipFolder(featurePath, path.join(featurePath, 'dist', `${folder}.zip`));
+        await zipFolder(
+            featurePath,
+            path.join(featurePath, 'dist', `${folder}.zip`),
+        ); */
+        yield createInstallationZip(featurePath);
+        yield createUninstallZip(featurePath);
     }
     core.info('index.json: ' + JSON.stringify(info, null, 2));
     // Write the updated index.json file

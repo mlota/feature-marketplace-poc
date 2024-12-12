@@ -170,7 +170,7 @@ const createPackageXmlContent = (
 	return Promise.resolve(createPackageXmlContent(types, '62.0'));
 }; */
 
-const createPackageXml = async (featurePath: string): Promise<void> => {
+const createPackageXml = async (featurePath: string, destructive = false): Promise<void> => {
 	const folders = await getSubdirectories(featurePath);
 
 	const types: SalesforcePackageXmlType = {};
@@ -185,12 +185,14 @@ const createPackageXml = async (featurePath: string): Promise<void> => {
 		}
 	}
 
-  const packageXml = createPackageXmlContent(types, API_VERSION);
-  const destructiveChangesXml = createPackageXmlContent(types);
+  const packageXml = createPackageXmlContent(
+		types,
+		!destructive ? API_VERSION : undefined,
+	);
 
-  core.info(`packageXml: ${packageXml}`);
-  core.info(`destructiveChangesXml: ${destructiveChangesXml}`);
-  const packageXmlPath = path.join(featurePath, 'package.xml');
+  const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
+  core.info(`${fileName}: ${packageXml}`);
+  const packageXmlPath = path.join(featurePath, fileName);
   await fsPromises.writeFile(packageXmlPath, packageXml);
 };
 
@@ -256,6 +258,80 @@ const captureError = (ex: unknown, detailedPrefix?: string) => {
 	);
 };
 
+const createInstallationZip = async (featurePath: string): Promise<void> => {
+  // Create the package.xml file
+  await createPackageXml(featurePath);
+
+  // Ensure the dist folder exists
+  const distPath = path.join(featurePath, 'dist');
+  await fsPromises.mkdir(distPath, { recursive: true });
+
+  // Zip the contents of the feature folder (including package.xml) and save
+  // it to the dist folder
+  await zipFolder(
+    featurePath,
+    path.join(featurePath, 'dist', 'install.zip'),
+  );
+
+  // Remove the temporary package.xml file
+  await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+};
+
+const createUninstallZip = async (featurePath: string): Promise<void> => {
+	// Create the package.xml file
+	await createPackageXml(featurePath, true);
+
+	// Ensure the dist folder exists
+	const distPath = path.join(featurePath, 'dist');
+	await fsPromises.mkdir(distPath, { recursive: true });
+
+	// Zip the contents of the feature folder (including package.xml) and save
+	// it to the dist folder
+	/* await zipFolder(
+    featurePath,
+    path.join(featurePath, 'dist', 'install.zip'),
+  ); */
+
+	// Create a zip file containing just the package.xml and destructiveChanges.xml files
+	const output = fs.createWriteStream(path.join(distPath, 'uninstall.zip'));
+	const archive = archiver('zip', {
+		zlib: { level: 9 }, // Sets the compression level
+	});
+
+	return new Promise<void>((resolve, reject) => {
+		output.on('close', () => {
+			console.log(
+				`Archive created successfully, total bytes: ${archive.pointer()}`,
+			);
+			resolve();
+		});
+
+		archive.on('error', err => {
+			reject(err);
+		});
+
+		archive.pipe(output);
+
+		// Append the package.xml and destructiveChanges.xml files to the archive
+		archive.file(path.join(featurePath, 'package.xml'), {
+			name: 'package.xml',
+		});
+		archive.file(path.join(featurePath, 'destructiveChanges.xml'), {
+			name: 'destructiveChanges.xml',
+		});
+
+		archive.finalize();
+	}).then(async () => {
+		// Remove the temporary xml files
+		await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+		await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml'));
+	});
+
+	/* // Remove the temporary xml files
+	await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+	await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml')); */
+};
+
 const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	// Get a list of each of the child folders under features
 	const features = await fsPromises.readdir(contentDir);
@@ -287,7 +363,7 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 			),
 		});
 
-		// Create the package.xml file
+		/* // Create the package.xml file
 		await createPackageXml(featurePath);
 
 		// Ensure the dist folder exists
@@ -299,7 +375,10 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 		await zipFolder(
 			featurePath,
 			path.join(featurePath, 'dist', `${folder}.zip`),
-		);
+		); */
+
+    await createInstallationZip(featurePath);
+    await createUninstallZip(featurePath);
 	}
 
 	core.info('index.json: ' + JSON.stringify(info, null, 2));
