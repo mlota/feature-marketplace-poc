@@ -2,7 +2,6 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
   <types>
     <members>Feature1</members>
-    <members>Feature1.cls-meta</members>
     <name>ApexClass</name>
   </types>
   <version>62.0</version>
