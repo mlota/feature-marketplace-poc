@@ -7,7 +7,8 @@
       "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       "version": "1.0.0",
       "files": [
-        "classes/Feature1.cls"
+        "classes/Feature1.cls",
+        "classes/Feature1.cls-meta.xml"
       ]
     },
     {
@@ -17,7 +18,8 @@
       "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       "version": "1.0.0",
       "files": [
-        "classes/Feature2.cls"
+        "classes/Feature2.cls",
+        "classes/Feature2.cls-meta.xml"
       ]
     },
     {
@@ -27,7 +29,8 @@
       "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
       "version": "1.0.0",
       "files": [
-        "classes/Feature3.cls"
+        "classes/Feature3.cls",
+        "classes/Feature3.cls-meta.xml"
       ]
     }
   ]
