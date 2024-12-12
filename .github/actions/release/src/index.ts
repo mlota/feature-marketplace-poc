@@ -12,6 +12,7 @@ import {
 } from './models/marketplace.models';
 
 // Constants
+const API_VERSION = core.getInput('api-version');
 const GITHUB_TRIGGERING_ACTOR: string = process.env.GITHUB_TRIGGERING_ACTOR!;
 const GITHUB_ACTOR: string = process.env.GITHUB_ACTOR!;
 const GITHUB_WORKSPACE: string = process.env.GITHUB_WORKSPACE!;
@@ -151,7 +152,7 @@ const createPackageXmlContent = (
 	return xml;
 };
 
-const createPackageXml = async (featurePath: string): Promise<string> => {
+/* const createPackageXml = async (featurePath: string): Promise<string> => {
 	const folders = await getSubdirectories(featurePath);
 
 	const types: SalesforcePackageXmlType = {};
@@ -167,6 +168,30 @@ const createPackageXml = async (featurePath: string): Promise<string> => {
 	}
 
 	return Promise.resolve(createPackageXmlContent(types, '62.0'));
+}; */
+
+const createPackageXml = async (featurePath: string): Promise<void> => {
+	const folders = await getSubdirectories(featurePath);
+
+	const types: SalesforcePackageXmlType = {};
+	for (const folder of folders) {
+		const baseName = path.basename(folder);
+		if (metadataTypeFolderMappings[baseName]) {
+			// Read files and folders (hence using 'entries' convention)
+			const entries = await fsPromises.readdir(folder, { withFileTypes: true });
+			types[metadataTypeFolderMappings[baseName]] = entries.map(
+				entry => path.parse(entry.name).name,
+			);
+		}
+	}
+
+  const packageXml = createPackageXmlContent(types, API_VERSION);
+  const destructiveChangesXml = createPackageXmlContent(types);
+
+  core.info(`packageXml: ${packageXml}`);
+  core.info(`destructiveChangesXml: ${destructiveChangesXml}`);
+  const packageXmlPath = path.join(featurePath, 'package.xml');
+  await fsPromises.writeFile(packageXmlPath, packageXml);
 };
 
 const hasPendingChanges = async (): Promise<boolean> => {
@@ -263,10 +288,7 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 		});
 
 		// Create the package.xml file
-		const packageXml = await createPackageXml(featurePath);
-		core.info(`packageXml: ${packageXml}`);
-		const packageXmlPath = path.join(featurePath, 'package.xml');
-		await fsPromises.writeFile(packageXmlPath, packageXml);
+		await createPackageXml(featurePath);
 
 		// Ensure the dist folder exists
 		const distPath = path.join(featurePath, 'dist');
@@ -285,11 +307,13 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	// Write the updated index.json file
 	await fsPromises.writeFile(indexFile, JSON.stringify(info, null, 2));
 
-  const hasChanges = await hasPendingChanges();
-  if (hasChanges) {
-    // Commit the changes generated in the action to the repository
-    await commit();
-  }
+	const hasChanges = await hasPendingChanges();
+	if (hasChanges) {
+		// Commit the changes generated in the action to the repository
+		await commit();
+	} else {
+		core.info('No changes to commit');
+	}
 };
 
 (async () => {

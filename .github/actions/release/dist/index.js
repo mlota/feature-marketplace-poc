@@ -54,6 +54,7 @@ const path = __importStar(require("path"));
 const xml2js_1 = require("xml2js");
 const marketplace_models_1 = require("./models/marketplace.models");
 // Constants
+const API_VERSION = core.getInput('api-version');
 const GITHUB_TRIGGERING_ACTOR = process.env.GITHUB_TRIGGERING_ACTOR;
 const GITHUB_ACTOR = process.env.GITHUB_ACTOR;
 const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
@@ -160,6 +161,23 @@ const createPackageXmlContent = (types, version) => {
     }
     return xml;
 };
+/* const createPackageXml = async (featurePath: string): Promise<string> => {
+    const folders = await getSubdirectories(featurePath);
+
+    const types: SalesforcePackageXmlType = {};
+    for (const folder of folders) {
+        const baseName = path.basename(folder);
+        if (metadataTypeFolderMappings[baseName]) {
+            // Read files and folders (hence using 'entries' convention)
+            const entries = await fsPromises.readdir(folder, { withFileTypes: true });
+            types[metadataTypeFolderMappings[baseName]] = entries.map(
+                entry => path.parse(entry.name).name,
+            );
+        }
+    }
+
+    return Promise.resolve(createPackageXmlContent(types, '62.0'));
+}; */
 const createPackageXml = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
     const folders = yield getSubdirectories(featurePath);
     const types = {};
@@ -171,7 +189,12 @@ const createPackageXml = (featurePath) => __awaiter(void 0, void 0, void 0, func
             types[marketplace_models_1.metadataTypeFolderMappings[baseName]] = entries.map(entry => path.parse(entry.name).name);
         }
     }
-    return Promise.resolve(createPackageXmlContent(types, '62.0'));
+    const packageXml = createPackageXmlContent(types, API_VERSION);
+    const destructiveChangesXml = createPackageXmlContent(types);
+    core.info(`packageXml: ${packageXml}`);
+    core.info(`destructiveChangesXml: ${destructiveChangesXml}`);
+    const packageXmlPath = path.join(featurePath, 'package.xml');
+    yield fs_1.promises.writeFile(packageXmlPath, packageXml);
 });
 const hasPendingChanges = () => __awaiter(void 0, void 0, void 0, function* () {
     let hasChanges = false;
@@ -249,10 +272,7 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
             files: parseFilePaths(files).map(file => path.relative(featurePath, file)),
         });
         // Create the package.xml file
-        const packageXml = yield createPackageXml(featurePath);
-        core.info(`packageXml: ${packageXml}`);
-        const packageXmlPath = path.join(featurePath, 'package.xml');
-        yield fs_1.promises.writeFile(packageXmlPath, packageXml);
+        yield createPackageXml(featurePath);
         // Ensure the dist folder exists
         const distPath = path.join(featurePath, 'dist');
         yield fs_1.promises.mkdir(distPath, { recursive: true });
@@ -267,6 +287,9 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     if (hasChanges) {
         // Commit the changes generated in the action to the repository
         yield commit();
+    }
+    else {
+        core.info('No changes to commit');
     }
 });
 (() => __awaiter(void 0, void 0, void 0, function* () {
