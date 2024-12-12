@@ -116,7 +116,7 @@ const parseFilePaths = (filesPaths: string[]): string[] => {
 
 const createPackageXmlContent = (
 	types: SalesforcePackageXmlType,
-	version: string,
+	version?: string,
 ) => {
 	let xml: string = '';
 	try {
@@ -125,7 +125,7 @@ const createPackageXmlContent = (
 		const packObj = {
 			Package: {
 				types: mappedTypes,
-				version,
+				...(version ? { version } : {}),
 			},
 		};
 
@@ -167,6 +167,28 @@ const createPackageXml = async (featurePath: string): Promise<string> => {
 	}
 
 	return Promise.resolve(createPackageXmlContent(types, '62.0'));
+};
+
+const hasPendingChanges = async (): Promise<boolean> => {
+	let hasChanges = false;
+	let output = '';
+
+	const options = {
+		listeners: {
+			stdout: (data: Buffer) => {
+				output += data.toString();
+			},
+		},
+	};
+
+	try {
+		await exec.exec('git', ['status', '--porcelain'], options);
+		hasChanges = output.trim().length > 0;
+	} catch (ex) {
+		captureError(ex, 'Error checking for pending changes');
+	}
+
+	return hasChanges;
 };
 
 const commit = async () => {
@@ -263,8 +285,11 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	// Write the updated index.json file
 	await fsPromises.writeFile(indexFile, JSON.stringify(info, null, 2));
 
-	// Commit the changes generated in the action to the repository
-	await commit();
+  const hasChanges = await hasPendingChanges();
+  if (hasChanges) {
+    // Commit the changes generated in the action to the repository
+    await commit();
+  }
 };
 
 (async () => {
