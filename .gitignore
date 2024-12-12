@@ -138,3 +138,6 @@ dist
 
 # Allow dist folders under .github/*/
 !.github/**/*/dist/
+
+# Allow dist folders under content/*/
+!content/*/dist/
