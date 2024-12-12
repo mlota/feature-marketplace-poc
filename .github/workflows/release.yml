@@ -1,0 +1,24 @@
+name: Release Feature Marketplace
+
+on:
+  push:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    name: Build Release
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run custom Node.js action
+        uses: ./github/actions/release
+        env:
+          GITHUB_WORKSPACE: "${{ github.workspace }}"

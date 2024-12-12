@@ -1,0 +1,23 @@
+{
+  "name": "feature-marketplace-poc",
+  "version": "1.0.0",
+  "main": "test.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1",
+    "archiver": "^7.0.1",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/xml2js": "^0.4.14"
+  }
+}
