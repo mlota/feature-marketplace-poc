@@ -179,9 +179,9 @@ const createPackageXml = async (featurePath: string): Promise<void> => {
 		if (metadataTypeFolderMappings[baseName]) {
 			// Read files and folders (hence using 'entries' convention)
 			const entries = await fsPromises.readdir(folder, { withFileTypes: true });
-			types[metadataTypeFolderMappings[baseName]] = entries.map(
-				entry => path.parse(entry.name).name,
-			);
+			types[metadataTypeFolderMappings[baseName]] = entries
+				.filter(entry => !entry.name.endsWith('-meta.xml'))
+				.map(entry => path.parse(entry.name).name);
 		}
 	}
 

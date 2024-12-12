@@ -186,7 +186,9 @@ const createPackageXml = (featurePath) => __awaiter(void 0, void 0, void 0, func
         if (marketplace_models_1.metadataTypeFolderMappings[baseName]) {
             // Read files and folders (hence using 'entries' convention)
             const entries = yield fs_1.promises.readdir(folder, { withFileTypes: true });
-            types[marketplace_models_1.metadataTypeFolderMappings[baseName]] = entries.map(entry => path.parse(entry.name).name);
+            types[marketplace_models_1.metadataTypeFolderMappings[baseName]] = entries
+                .filter(entry => !entry.name.endsWith('-meta.xml'))
+                .map(entry => path.parse(entry.name).name);
         }
     }
     const packageXml = createPackageXmlContent(types, API_VERSION);
