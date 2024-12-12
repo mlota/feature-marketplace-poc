@@ -135,3 +135,6 @@ dist
 
 # VSCode
 .vscode/
+
+# Allow dist folders under .github/*/
+!.github/**/*/dist/
