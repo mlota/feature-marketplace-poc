@@ -55,6 +55,7 @@ const xml2js_1 = require("xml2js");
 const marketplace_models_1 = require("./models/marketplace.models");
 // Constants
 const GITHUB_TRIGGERING_ACTOR = process.env.GITHUB_TRIGGERING_ACTOR;
+const GITHUB_ACTOR = process.env.GITHUB_ACTOR;
 const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
 const INDEX_FILE = path.join(GITHUB_WORKSPACE, 'index.json');
 const CONTENT_DIR = path.join(GITHUB_WORKSPACE, 'content');
@@ -182,13 +183,13 @@ const commit = () => __awaiter(void 0, void 0, void 0, function* () {
             'config',
             '--global',
             'user.name',
-            GITHUB_TRIGGERING_ACTOR,
+            'github-actions[bot]',
         ]);
         yield exec.exec('git', [
             'config',
             '--global',
             'user.email',
-            'melvin_lota@hotmail.com',
+            'github-actions[bot]@users.noreply.github.com',
         ]);
         // Add changes
         yield exec.exec('git', ['add', '.']);
@@ -196,7 +197,7 @@ const commit = () => __awaiter(void 0, void 0, void 0, function* () {
         yield exec.exec('git', [
             'commit',
             '-m',
-            '[chore]: Automated commit from Marketplace Release Action',
+            `[ci]: Automated commit from Marketplace Release Action (triggered by @${GITHUB_ACTOR})`,
         ]);
         // Push changes
         yield exec.exec('git', ['push']);
