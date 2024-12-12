@@ -18,6 +18,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./.github/actions/release
+
       - name: Run custom Node.js action
         uses: ./.github/actions/release
         env:
