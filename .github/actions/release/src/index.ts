@@ -13,6 +13,7 @@ import {
 
 // Constants
 const GITHUB_TRIGGERING_ACTOR: string = process.env.GITHUB_TRIGGERING_ACTOR!;
+const GITHUB_ACTOR: string = process.env.GITHUB_ACTOR!;
 const GITHUB_WORKSPACE: string = process.env.GITHUB_WORKSPACE!;
 const INDEX_FILE: string = path.join(GITHUB_WORKSPACE, 'index.json');
 const CONTENT_DIR: string = path.join(GITHUB_WORKSPACE, 'content');
@@ -175,13 +176,13 @@ const commit = async () => {
 			'config',
 			'--global',
 			'user.name',
-			GITHUB_TRIGGERING_ACTOR,
+			'github-actions[bot]',
 		]);
 		await exec.exec('git', [
 			'config',
 			'--global',
 			'user.email',
-			'melvin_lota@hotmail.com',
+			'github-actions[bot]@users.noreply.github.com',
 		]);
 
 		// Add changes
@@ -191,7 +192,7 @@ const commit = async () => {
 		await exec.exec('git', [
 			'commit',
 			'-m',
-			'[chore]: Automated commit from Marketplace Release Action',
+			`[ci]: Automated commit from Marketplace Release Action (triggered by @${GITHUB_ACTOR})`,
 		]);
 
 		// Push changes
