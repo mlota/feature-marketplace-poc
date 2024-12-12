@@ -141,10 +141,7 @@ const createPackageXmlContent = (types, version) => {
         const builder = new xml2js_1.Builder();
         const mappedTypes = [];
         const packObj = {
-            Package: {
-                types: mappedTypes,
-                version,
-            },
+            Package: Object.assign({ types: mappedTypes }, (version ? { version } : {})),
         };
         // Append new nodes to the Package object
         Object.entries(types).forEach(([name, members]) => {
@@ -175,6 +172,25 @@ const createPackageXml = (featurePath) => __awaiter(void 0, void 0, void 0, func
         }
     }
     return Promise.resolve(createPackageXmlContent(types, '62.0'));
+});
+const hasPendingChanges = () => __awaiter(void 0, void 0, void 0, function* () {
+    let hasChanges = false;
+    let output = '';
+    const options = {
+        listeners: {
+            stdout: (data) => {
+                output += data.toString();
+            },
+        },
+    };
+    try {
+        yield exec.exec('git', ['status', '--porcelain'], options);
+        hasChanges = output.trim().length > 0;
+    }
+    catch (ex) {
+        captureError(ex, 'Error checking for pending changes');
+    }
+    return hasChanges;
 });
 const commit = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -247,8 +263,11 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     core.info('index.json: ' + JSON.stringify(info, null, 2));
     // Write the updated index.json file
     yield fs_1.promises.writeFile(indexFile, JSON.stringify(info, null, 2));
-    // Commit the changes generated in the action to the repository
-    yield commit();
+    const hasChanges = yield hasPendingChanges();
+    if (hasChanges) {
+        // Commit the changes generated in the action to the repository
+        yield commit();
+    }
 });
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield run(CONTENT_DIR, INDEX_FILE);
