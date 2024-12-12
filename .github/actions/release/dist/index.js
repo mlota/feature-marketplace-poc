@@ -195,6 +195,7 @@ const createPackageXml = (featurePath_1, ...args_1) => __awaiter(void 0, [featur
     const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
     core.info(`${fileName}: ${packageXml}`);
     const packageXmlPath = path.join(featurePath, fileName);
+    console.log('package.xml has been written to:', packageXmlPath);
     yield fs_1.promises.writeFile(packageXmlPath, packageXml);
 });
 const hasPendingChanges = () => __awaiter(void 0, void 0, void 0, function* () {

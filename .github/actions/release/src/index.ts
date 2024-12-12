@@ -193,6 +193,7 @@ const createPackageXml = async (featurePath: string, destructive = false): Promi
   const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
   core.info(`${fileName}: ${packageXml}`);
   const packageXmlPath = path.join(featurePath, fileName);
+  console.log('package.xml has been written to:', packageXmlPath);
   await fsPromises.writeFile(packageXmlPath, packageXml);
 };
 
