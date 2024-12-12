@@ -272,7 +272,15 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     }
     console.log('Does file exist?', exists);
     // Remove the temporary package.xml file
-    yield fs_1.promises.unlink(path.join(featurePath, 'package.xml'));
+    // await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+    const packageXmlPath = path.join(featurePath, 'package.xml');
+    try {
+        yield exec.exec('rm', [packageXmlPath]);
+        console.log(`File removed: ${packageXmlPath}`);
+    }
+    catch (error) {
+        console.error(`Error removing file: ${packageXmlPath}`, error);
+    }
 });
 const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
     // Create the package.xml file
@@ -310,8 +318,16 @@ const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, fu
         archive.finalize();
     }).then(() => __awaiter(void 0, void 0, void 0, function* () {
         // Remove the temporary xml files
-        yield fs_1.promises.unlink(path.join(featurePath, 'package.xml'));
-        yield fs_1.promises.unlink(path.join(featurePath, 'destructiveChanges.xml'));
+        // await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+        // await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml'));
+        const packageXmlPath = path.join(featurePath, 'package.xml');
+        try {
+            yield exec.exec('rm', [packageXmlPath]);
+            console.log(`File removed: ${packageXmlPath}`);
+        }
+        catch (error) {
+            console.error(`Error removing file: ${packageXmlPath}`, error);
+        }
     }));
     /* // Remove the temporary xml files
     await fsPromises.unlink(path.join(featurePath, 'package.xml'));
