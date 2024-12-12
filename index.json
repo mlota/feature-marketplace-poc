@@ -1,47 +1,34 @@
 {
-	"features": [
-		{
-			"id": "550e8400-e29b-41d4-a716-446655440000",
-			"name": "feature1",
+  "features": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "feature1",
       "label": "Feature 1",
-			"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-			"version": "1.0.0",
-			"files": [
-				{
-					"path": "content/feature1/classes/Feature1.cls",
-					"type": "class"
-				}
-			]
-		},
-		{
-			"id": "e7b8a9d4-3c5b-4d2b-8f8b-2f8b8f8b8f8b",
-			"name": "feature2",
+      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      "version": "1.0.0",
+      "files": [
+        "classes/Feature1.cls"
+      ]
+    },
+    {
+      "id": "e7b8a9d4-3c5b-4d2b-8f8b-2f8b8f8b8f8b",
+      "name": "feature2",
       "label": "Feature 2",
-			"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-			"version": "1.0.0",
-			"files": [
-				{
-					"path": "content/feature2/classes/Feature2.cls",
-					"type": "class"
-				}
-			]
-		},
-		{
-			"id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      "version": "1.0.0",
+      "files": [
+        "classes/Feature2.cls"
+      ]
+    },
+    {
+      "id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
       "name": "feature3",
       "label": "Feature 3",
       "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       "version": "1.0.0",
-			"files": [
-				{
-					"path": "content/feature3/classes/Feature3.cls",
-					"type": "class"
-				},
-        {
-					"path": "content/feature3/feature3.zip",
-					"type": "package"
-				}
-			]
-		}
-	]
+      "files": [
+        "classes/Feature3.cls"
+      ]
+    }
+  ]
 }
