@@ -272,6 +272,8 @@ const createInstallationZip = async (featurePath: string): Promise<void> => {
     featurePath,
     path.join(featurePath, 'dist', 'install.zip'),
   );
+  console.log('featurePath', featurePath);
+  console.log(path.join(featurePath, 'package.xml'));
 
   // Remove the temporary package.xml file
   await fsPromises.unlink(path.join(featurePath, 'package.xml'));

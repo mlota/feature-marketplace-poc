@@ -259,6 +259,8 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     // Zip the contents of the feature folder (including package.xml) and save
     // it to the dist folder
     yield zipFolder(featurePath, path.join(featurePath, 'dist', 'install.zip'));
+    console.log('featurePath', featurePath);
+    console.log(path.join(featurePath, 'package.xml'));
     // Remove the temporary package.xml file
     yield fs_1.promises.unlink(path.join(featurePath, 'package.xml'));
 });
