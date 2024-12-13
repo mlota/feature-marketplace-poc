@@ -24,33 +24,44 @@ jobs:
           node-version: '20'
 
       - name: Get latest tag
-        continue-on-error: true
-        id: get_latest_tag
-        run: |
-          latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n1)
-          if [ -z "$latest_tag" ]; then
-            latest_tag="v0.0.0"
-          fi
-          echo "Latest tag: $latest_tag"
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+        id: latest-tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
 
-      - name: Calculate next version
-        id: calc_version
-        run: |
-          latest_tag="${{ env.latest_tag }}"
-          if [ -z "$latest_tag" ]; then
-            echo "No tags found, setting version to v0.1.0"
-            new_version="v0.1.0"
-          else
-            major=$(echo "$latest_tag" | awk -F'[v.]' '{print $2}')
-            minor=$(echo "$latest_tag" | awk -F'[v.]' '{print $3}')
-            patch=$(echo "$latest_tag" | awk -F'[v.]' '{print $4}')            # Increment the PATCH version
-            patch=$((patch + 1))
-            echo $patch
-            new_version="v$major.$minor.$patch"
-          fi
-          echo "New version: $new_version"
-          echo "new_version=$new_version" >> $GITHUB_ENV
+      - name: Bump release version
+        id: bump-version
+        uses: actions-ecosystem/action-bump-semver@v1
+        with:
+          current_version: ${{ steps.latest-tag.outputs.tag }}
+          level: patch
+
+      # - name: Get latest tag
+      #   continue-on-error: true
+      #   id: get_latest_tag
+      #   run: |
+      #     latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n1)
+      #     if [ -z "$latest_tag" ]; then
+      #       latest_tag="v0.0.0"
+      #     fi
+      #     echo "Latest tag: $latest_tag"
+      #     echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+      # - name: Calculate next version
+      #   id: calc_version
+      #   run: |
+      #     latest_tag="${{ env.latest_tag }}"
+      #     if [ -z "$latest_tag" ]; then
+      #       echo "No tags found, setting version to v0.1.0"
+      #       new_version="v0.1.0"
+      #     else
+      #       major=$(echo "$latest_tag" | awk -F'[v.]' '{print $2}')
+      #       minor=$(echo "$latest_tag" | awk -F'[v.]' '{print $3}')
+      #       patch=$(echo "$latest_tag" | awk -F'[v.]' '{print $4}')            # Increment the PATCH version
+      #       patch=$((patch + 1))
+      #       echo $patch
+      #       new_version="v$major.$minor.$patch"
+      #     fi
+      #     echo "New version: $new_version"
+      #     echo "new_version=$new_version" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: npm install
@@ -61,4 +72,5 @@ jobs:
         env:
           GITHUB_WORKSPACE: '${{ github.workspace }}'
         with:
-          release-version: ${{ env.new_version }}
+          release-version: ${{ steps.bump_version.outputs.new_version }}
+          # release-version: ${{ env.new_version }}
