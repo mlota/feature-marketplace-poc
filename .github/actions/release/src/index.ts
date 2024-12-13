@@ -17,6 +17,7 @@ const API_VERSION = core.getInput('api-version');
 const GITHUB_TOKEN: string = core.getInput('github-token', { required: true });
 const TAG_NAME: string = core.getInput('tag-name', { required: true });
 const RELEASE_NAME: string = core.getInput('release-name', { required: true });
+const RELEASE_VERSION: string = core.getInput('release-version', { required: true });
 
 // Environment variables
 const GITHUB_TRIGGERING_ACTOR: string = process.env.GITHUB_TRIGGERING_ACTOR!;
@@ -439,6 +440,7 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
   core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
   core.info('TAG_NAME: ' + TAG_NAME);
   core.info('RELEASE_NAME: ' + RELEASE_NAME);
+  core.info('RELEASE_VERSION: ' + RELEASE_VERSION);
 
 	await run(CONTENT_DIR, INDEX_FILE);
 	if (errors.length) {

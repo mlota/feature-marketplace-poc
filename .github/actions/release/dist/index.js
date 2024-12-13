@@ -59,6 +59,7 @@ const API_VERSION = core.getInput('api-version');
 const GITHUB_TOKEN = core.getInput('github-token', { required: true });
 const TAG_NAME = core.getInput('tag-name', { required: true });
 const RELEASE_NAME = core.getInput('release-name', { required: true });
+const RELEASE_VERSION = core.getInput('release-version', { required: true });
 // Environment variables
 const GITHUB_TRIGGERING_ACTOR = process.env.GITHUB_TRIGGERING_ACTOR;
 const GITHUB_ACTOR = process.env.GITHUB_ACTOR;
@@ -399,6 +400,7 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
     core.info('TAG_NAME: ' + TAG_NAME);
     core.info('RELEASE_NAME: ' + RELEASE_NAME);
+    core.info('RELEASE_VERSION: ' + RELEASE_VERSION);
     yield run(CONTENT_DIR, INDEX_FILE);
     if (errors.length) {
         core.setFailed(errors.join('\n'));

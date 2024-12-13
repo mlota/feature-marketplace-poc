@@ -17,6 +17,10 @@ inputs:
     description: 'Name for the release'
     required: true
     default: 'Release ${{ github.ref_name }}'
+  release-version:
+    description: 'Version for the release'
+    required: true
+    default: 'v1.0.0'
 runs:
   using: 'node20'
   main: 'dist/index.js'

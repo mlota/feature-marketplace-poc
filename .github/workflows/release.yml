@@ -23,6 +23,22 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Get the latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+      - name: Increment version
+        id: increment_version
+        run: |
+          if [ -z "$latest_tag" ]; then
+            new_version="v1.0.0"
+          else
+            new_version=$(echo $latest_tag | awk -F. -v OFS=. '{$NF++;print}')
+          fi
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm install
         working-directory: ./.github/actions/release
@@ -31,3 +47,5 @@ jobs:
         uses: ./.github/actions/release
         env:
           GITHUB_WORKSPACE: "${{ github.workspace }}"
+        with:
+          release-version: ${{ env.new_version }}
