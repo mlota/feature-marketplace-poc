@@ -186,24 +186,6 @@ const createEmptyPackageXmlContent = (version: string): string => {
 	return xml;
 };
 
-/* const createPackageXml = async (featurePath: string): Promise<string> => {
-	const folders = await getSubdirectories(featurePath);
-
-	const types: SalesforcePackageXmlType = {};
-	for (const folder of folders) {
-		const baseName = path.basename(folder);
-		if (metadataTypeFolderMappings[baseName]) {
-			// Read files and folders (hence using 'entries' convention)
-			const entries = await fsPromises.readdir(folder, { withFileTypes: true });
-			types[metadataTypeFolderMappings[baseName]] = entries.map(
-				entry => path.parse(entry.name).name,
-			);
-		}
-	}
-
-	return Promise.resolve(createPackageXmlContent(types, '62.0'));
-}; */
-
 const createPackageXml = async (
 	featurePath: string,
 	destructive = false,
@@ -239,17 +221,6 @@ const createPackageXml = async (
 		const packageXml = createPackageXmlContent(types, API_VERSION);
 		await fsPromises.writeFile(packageXmlPath, packageXml);
 	}
-
-	/* const packageXml = createPackageXmlContent(
-		types,
-		!destructive ? API_VERSION : undefined,
-	);
-
-	const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
-	core.info(`${fileName}: ${packageXml}`);
-	const packageXmlPath = path.join(featurePath, fileName);
-	console.log('package.xml has been written to:', packageXmlPath);
-	await fsPromises.writeFile(packageXmlPath, packageXml); */
 };
 
 const hasPendingChanges = async (): Promise<boolean> => {
@@ -416,48 +387,6 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 	await deleteFile(destructiveChangesXmlPath);
 
 	return uninstallZipPath;
-
-	/* return new Promise<string>((resolve, reject) => {
-		output.on('close', () => {
-			console.log(
-				`Archive created successfully, total bytes: ${archive.pointer()}`,
-			);
-			resolve(uninstallZipPath);
-		});
-
-		archive.on('error', err => {
-			reject(err);
-		});
-
-		archive.pipe(output);
-
-		// Append the package.xml and destructiveChanges.xml files to the archive
-		archive.file(path.join(featurePath, 'package.xml'), {
-			name: 'package.xml',
-		});
-		archive.file(path.join(featurePath, 'destructiveChanges.xml'), {
-			name: 'destructiveChanges.xml',
-		});
-
-		archive.finalize();
-	}).then(async () => {
-		// Remove the temporary xml files
-		// await fsPromises.unlink(path.join(featurePath, 'package.xml'));
-		// await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml'));
-		const packageXmlPath = path.join(featurePath, 'package.xml');
-		try {
-			await exec.exec('rm', [packageXmlPath]);
-			console.log(`File removed: ${packageXmlPath}`);
-		} catch (error) {
-			console.error(`Error removing file: ${packageXmlPath}`, error);
-		}
-
-		return uninstallZipPath;
-	}); */
-
-	/* // Remove the temporary xml files
-	await fsPromises.unlink(path.join(featurePath, 'package.xml'));
-	await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml')); */
 };
 
 const run = async (contentDir: string, indexFile: string): Promise<void> => {
@@ -469,19 +398,31 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 		features: [],
 	};
 
+	// Get the owner and repo from the context
+	const { owner, repo } = github.context.repo;
+
+	const tempPath = `https://api.github.com/repos/${owner}/${repo}/contents/${contentDir}`;
+	core.info(tempPath);
+
 	const installZipPaths: string[] = [];
 	const uninstallZipPaths: string[] = [];
 
-	// features.forEach(async folder => {
 	for (const folder of features) {
 		const featurePath = path.join(contentDir, folder);
-		// Read the existing info.json file. We'll need to update this with the files
+		// Read the existing info.json file from the feature folder. We'll need
+		// this to build the info.json
 		const featureInfo = await fsPromises.readFile(
 			path.join(featurePath, 'info.json'),
 			'utf8',
 		);
 		const parsed = JSON.parse(featureInfo);
 		const files = await getFolderStructure([featurePath]);
+
+		const installZipPath = await createInstallationZip(featurePath);
+		const uninstallZipPath = await createUninstallZip(featurePath);
+
+		installZipPaths.push(installZipPath);
+		uninstallZipPaths.push(uninstallZipPath);
 
 		info.features.push({
 			id: parsed.id,
@@ -492,27 +433,9 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 			files: parseFilePaths(files).map(file =>
 				path.relative(featurePath, file),
 			),
+			installZipFilePath: installZipPath,
+			uninstallZipFilePath: uninstallZipPath,
 		});
-
-		/* // Create the package.xml file
-		await createPackageXml(featurePath);
-
-		// Ensure the dist folder exists
-		const distPath = path.join(featurePath, 'dist');
-		await fsPromises.mkdir(distPath, { recursive: true });
-
-		// Zip the contents of the feature folder (including package.xml) and save
-		// it to the dist folder
-		await zipFolder(
-			featurePath,
-			path.join(featurePath, 'dist', `${folder}.zip`),
-		); */
-
-		const installZipPath = await createInstallationZip(featurePath);
-		const uninstallZipPath = await createUninstallZip(featurePath);
-
-		installZipPaths.push(installZipPath);
-		uninstallZipPaths.push(uninstallZipPath);
 	}
 
 	core.info('index.json: ' + JSON.stringify(info, null, 2));
@@ -522,7 +445,6 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 		tag_name: RELEASE_VERSION,
 		name: RELEASE_VERSION,
 		body: `Automated release for version ${RELEASE_VERSION}`,
-		// body: 'Release created by the Marketplace Release Action',
 	});
 
 	const releaseId = response.data.id;
@@ -558,17 +480,6 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 };
 
 (async () => {
-	core.info('GITHUB_TRIGGERING_ACTOR: ' + GITHUB_TRIGGERING_ACTOR);
-	core.info('GITHUB_ACTOR: ' + GITHUB_ACTOR);
-	core.info('GITHUB_WORKSPACE: ' + GITHUB_WORKSPACE);
-	core.info('INDEX_FILE: ' + INDEX_FILE);
-	core.info('CONTENT_DIR: ' + CONTENT_DIR);
-	core.info('API_VERSION: ' + API_VERSION);
-	core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
-	core.info('TAG_NAME: ' + TAG_NAME);
-	core.info('RELEASE_NAME: ' + RELEASE_NAME);
-	core.info('RELEASE_VERSION: ' + RELEASE_VERSION);
-
 	await run(CONTENT_DIR, INDEX_FILE);
 	if (errors.length) {
 		core.setFailed(errors.join('\n'));
