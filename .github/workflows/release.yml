@@ -28,8 +28,6 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          release_branches: main
-          custom_tag: 'v{{version}}'
           default_bump: patch
 
       # - name: Get latest tag
