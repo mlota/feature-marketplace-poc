@@ -274,15 +274,16 @@ const createInstallationZip = async (featurePath: string): Promise<string> => {
 
   // Ensure the dist folder exists
   const distPath = path.join(featurePath, 'dist');
+  const basename = path.basename(featurePath);
   await fsPromises.mkdir(distPath, { recursive: true });
 
-  const installZipPath = path.join(featurePath, 'dist', 'install.zip');
+  const installZipPath = path.join(featurePath, 'dist', `${basename}-install.zip`);
 
   // Zip the contents of the feature folder (including package.xml) and save
   // it to the dist folder
   await zipFolder(
     featurePath,
-    path.join(featurePath, 'dist', 'install.zip'),
+    path.join(featurePath, 'dist', `${basename}-install.zip`),
   );
   console.log('featurePath', featurePath);
   console.log(path.join(featurePath, 'package.xml'));
@@ -315,9 +316,10 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 
 	// Ensure the dist folder exists
 	const distPath = path.join(featurePath, 'dist');
+  const basename = path.basename(featurePath);
 	await fsPromises.mkdir(distPath, { recursive: true });
 
-  const uninstallZipPath = path.join(featurePath, 'dist', 'uninstall.zip');
+  const uninstallZipPath = path.join(featurePath, 'dist', `${basename}-uninstall.zip`);
 
 	// Zip the contents of the feature folder (including package.xml) and save
 	// it to the dist folder
@@ -327,7 +329,7 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
   ); */
 
 	// Create a zip file containing just the package.xml and destructiveChanges.xml files
-	const output = fs.createWriteStream(path.join(distPath, 'uninstall.zip'));
+	const output = fs.createWriteStream(path.join(distPath, `${basename}-uninstall.zip`));
 	const archive = archiver('zip', {
 		zlib: { level: 9 }, // Sets the compression level
 	});
@@ -459,10 +461,6 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 			release_id: releaseId,
 			name: fileName,
 			data: fileData,
-			headers: {
-				'content-type': 'application/zip',
-				'content-length': fileData.length,
-			},
 		});
 	}
 

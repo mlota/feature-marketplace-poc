@@ -263,11 +263,12 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     yield createPackageXml(featurePath);
     // Ensure the dist folder exists
     const distPath = path.join(featurePath, 'dist');
+    const basename = path.basename(featurePath);
     yield fs_1.promises.mkdir(distPath, { recursive: true });
-    const installZipPath = path.join(featurePath, 'dist', 'install.zip');
+    const installZipPath = path.join(featurePath, 'dist', `${basename}-install.zip`);
     // Zip the contents of the feature folder (including package.xml) and save
     // it to the dist folder
-    yield zipFolder(featurePath, path.join(featurePath, 'dist', 'install.zip'));
+    yield zipFolder(featurePath, path.join(featurePath, 'dist', `${basename}-install.zip`));
     console.log('featurePath', featurePath);
     console.log(path.join(featurePath, 'package.xml'));
     let exists = false;
@@ -296,8 +297,9 @@ const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, fu
     yield createPackageXml(featurePath, true);
     // Ensure the dist folder exists
     const distPath = path.join(featurePath, 'dist');
+    const basename = path.basename(featurePath);
     yield fs_1.promises.mkdir(distPath, { recursive: true });
-    const uninstallZipPath = path.join(featurePath, 'dist', 'uninstall.zip');
+    const uninstallZipPath = path.join(featurePath, 'dist', `${basename}-uninstall.zip`);
     // Zip the contents of the feature folder (including package.xml) and save
     // it to the dist folder
     /* await zipFolder(
@@ -305,7 +307,7 @@ const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, fu
     path.join(featurePath, 'dist', 'install.zip'),
   ); */
     // Create a zip file containing just the package.xml and destructiveChanges.xml files
-    const output = fs.createWriteStream(path.join(distPath, 'uninstall.zip'));
+    const output = fs.createWriteStream(path.join(distPath, `${basename}-uninstall.zip`));
     const archive = (0, archiver_1.default)('zip', {
         zlib: { level: 9 }, // Sets the compression level
     });
@@ -403,10 +405,6 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
             release_id: releaseId,
             name: fileName,
             data: fileData,
-            headers: {
-                'content-type': 'application/zip',
-                'content-length': fileData.length,
-            },
         });
     }
     // Write the updated index.json file
