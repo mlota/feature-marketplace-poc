@@ -53,8 +53,12 @@ const fs_1 = require("fs");
 const path = __importStar(require("path"));
 const xml2js_1 = require("xml2js");
 const marketplace_models_1 = require("./models/marketplace.models");
-// Constants
+// Action inputs
 const API_VERSION = core.getInput('api-version');
+const GITHUB_TOKEN = core.getInput('github-token', { required: true });
+const TAG_NAME = core.getInput('tag-name', { required: true });
+const RELEASE_NAME = core.getInput('release-name', { required: true });
+// Environment variables
 const GITHUB_TRIGGERING_ACTOR = process.env.GITHUB_TRIGGERING_ACTOR;
 const GITHUB_ACTOR = process.env.GITHUB_ACTOR;
 const GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE;
@@ -384,6 +388,15 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 (() => __awaiter(void 0, void 0, void 0, function* () {
+    core.info('GITHUB_TRIGGERING_ACTOR: ' + GITHUB_TRIGGERING_ACTOR);
+    core.info('GITHUB_ACTOR: ' + GITHUB_ACTOR);
+    core.info('GITHUB_WORKSPACE: ' + GITHUB_WORKSPACE);
+    core.info('INDEX_FILE: ' + INDEX_FILE);
+    core.info('CONTENT_DIR: ' + CONTENT_DIR);
+    core.info('API_VERSION: ' + API_VERSION);
+    core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
+    core.info('TAG_NAME: ' + TAG_NAME);
+    core.info('RELEASE_NAME: ' + RELEASE_NAME);
     yield run(CONTENT_DIR, INDEX_FILE);
     if (errors.length) {
         core.setFailed(errors.join('\n'));

@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import * as github from '@actions/github';
 import archiver from 'archiver';
 import * as fs from 'fs';
 import { promises as fsPromises } from 'fs';
@@ -11,13 +12,19 @@ import {
 	SalesforcePackageXmlType,
 } from './models/marketplace.models';
 
-// Constants
+// Action inputs
 const API_VERSION = core.getInput('api-version');
+const GITHUB_TOKEN: string = core.getInput('github-token', { required: true });
+const TAG_NAME: string = core.getInput('tag-name', { required: true });
+const RELEASE_NAME: string = core.getInput('release-name', { required: true });
+
+// Environment variables
 const GITHUB_TRIGGERING_ACTOR: string = process.env.GITHUB_TRIGGERING_ACTOR!;
 const GITHUB_ACTOR: string = process.env.GITHUB_ACTOR!;
 const GITHUB_WORKSPACE: string = process.env.GITHUB_WORKSPACE!;
 const INDEX_FILE: string = path.join(GITHUB_WORKSPACE, 'index.json');
 const CONTENT_DIR: string = path.join(GITHUB_WORKSPACE, 'content');
+
 const IGNORED_DIRECTORY_CONTENT = [
 	'dist',
 	'.DS_Store',
@@ -422,6 +429,16 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 };
 
 (async () => {
+  core.info('GITHUB_TRIGGERING_ACTOR: ' + GITHUB_TRIGGERING_ACTOR);
+  core.info('GITHUB_ACTOR: ' + GITHUB_ACTOR);
+  core.info('GITHUB_WORKSPACE: ' + GITHUB_WORKSPACE);
+  core.info('INDEX_FILE: ' + INDEX_FILE);
+  core.info('CONTENT_DIR: ' + CONTENT_DIR);
+  core.info('API_VERSION: ' + API_VERSION);
+  core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
+  core.info('TAG_NAME: ' + TAG_NAME);
+  core.info('RELEASE_NAME: ' + RELEASE_NAME);
+
 	await run(CONTENT_DIR, INDEX_FILE);
 	if (errors.length) {
 		core.setFailed(errors.join('\n'));

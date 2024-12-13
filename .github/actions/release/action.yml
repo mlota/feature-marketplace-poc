@@ -5,6 +5,18 @@ inputs:
     description: 'The Salesforce API version to use when creating packages'
     required: false
     default: '62.0'
+  github-token:
+    description: 'Access token for the org'
+    required: true
+    default: ${{ github.token }}
+  tag-name:
+    description: 'Tag name for the release'
+    required: true
+    default: ${{ github.ref_name }}
+  release-name:
+    description: 'Name for the release'
+    required: true
+    default: 'Release ${{ github.ref_name }}'
 runs:
   using: 'node20'
   main: 'dist/index.js'
