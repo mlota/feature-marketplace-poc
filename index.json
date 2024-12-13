@@ -10,8 +10,8 @@
         "classes/Feature1.cls",
         "classes/Feature1.cls-meta.xml"
       ],
-      "installZipFilePath": "/home/runner/work/feature-marketplace-poc/feature-marketplace-poc/content/feature1/dist/feature1-install.zip",
-      "uninstallZipFilePath": "/home/runner/work/feature-marketplace-poc/feature-marketplace-poc/content/feature1/dist/feature1-uninstall.zip"
+      "installZipFilePath": "https://api.github.com/repos/mlota/feature-marketplace-poc/contents/content/feature1/dist/feature1-install.zip",
+      "uninstallZipFilePath": "https://api.github.com/repos/mlota/feature-marketplace-poc/contents/content/feature1/dist/feature1-uninstall.zip"
     },
     {
       "id": "e7b8a9d4-3c5b-4d2b-8f8b-2f8b8f8b8f8b",
@@ -23,8 +23,8 @@
         "classes/Feature2.cls",
         "classes/Feature2.cls-meta.xml"
       ],
-      "installZipFilePath": "/home/runner/work/feature-marketplace-poc/feature-marketplace-poc/content/feature2/dist/feature2-install.zip",
-      "uninstallZipFilePath": "/home/runner/work/feature-marketplace-poc/feature-marketplace-poc/content/feature2/dist/feature2-uninstall.zip"
+      "installZipFilePath": "https://api.github.com/repos/mlota/feature-marketplace-poc/contents/content/feature2/dist/feature2-install.zip",
+      "uninstallZipFilePath": "https://api.github.com/repos/mlota/feature-marketplace-poc/contents/content/feature2/dist/feature2-uninstall.zip"
     },
     {
       "id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
@@ -36,8 +36,8 @@
         "classes/Feature3.cls",
         "classes/Feature3.cls-meta.xml"
       ],
-      "installZipFilePath": "/home/runner/work/feature-marketplace-poc/feature-marketplace-poc/content/feature3/dist/feature3-install.zip",
-      "uninstallZipFilePath": "/home/runner/work/feature-marketplace-poc/feature-marketplace-poc/content/feature3/dist/feature3-uninstall.zip"
+      "installZipFilePath": "https://api.github.com/repos/mlota/feature-marketplace-poc/contents/content/feature3/dist/feature3-install.zip",
+      "uninstallZipFilePath": "https://api.github.com/repos/mlota/feature-marketplace-poc/contents/content/feature3/dist/feature3-uninstall.zip"
     }
   ]
 }
