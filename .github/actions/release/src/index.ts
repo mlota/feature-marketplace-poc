@@ -163,6 +163,30 @@ const createPackageXmlContent = (
 	return xml;
 };
 
+const createEmptyPackageXmlContent = (
+	version: string,
+): string => {
+	let xml: string = '';
+	try {
+		const builder = new Builder();
+		const packObj = {
+			Package: { version },
+		};
+
+		xml = builder
+			.buildObject(packObj)
+			.replace(
+				'<Package>',
+				'<Package xmlns="http://soap.sforce.com/2006/04/metadata">',
+			)
+			.replace(' standalone="yes"', '');
+	} catch (ex) {
+		captureError(ex, 'Error creating empty package.xml');
+	}
+
+	return xml;
+};
+
 /* const createPackageXml = async (featurePath: string): Promise<string> => {
 	const folders = await getSubdirectories(featurePath);
 
@@ -186,6 +210,8 @@ const createPackageXml = async (
 	destructive = false,
 ): Promise<void> => {
 	const folders = await getSubdirectories(featurePath);
+  const packageXmlPath = path.join(featurePath, 'package.xml');
+  const destructiveChangesXmlPath = path.join(featurePath, 'destructiveChanges.xml');
 
 	const types: SalesforcePackageXmlType = {};
 	for (const folder of folders) {
@@ -199,7 +225,20 @@ const createPackageXml = async (
 		}
 	}
 
-	const packageXml = createPackageXmlContent(
+  if (destructive) {
+		const emptyPackageXml = createEmptyPackageXmlContent(API_VERSION);
+		await fsPromises.writeFile(packageXmlPath, emptyPackageXml);
+		const destructiveChangesXml = createPackageXmlContent(types);
+		await fsPromises.writeFile(
+			destructiveChangesXmlPath,
+			destructiveChangesXml,
+		);
+	} else {
+		const packageXml = createPackageXmlContent(types, API_VERSION);
+		await fsPromises.writeFile(packageXmlPath, packageXml);
+	}
+
+	/* const packageXml = createPackageXmlContent(
 		types,
 		!destructive ? API_VERSION : undefined,
 	);
@@ -208,7 +247,7 @@ const createPackageXml = async (
 	core.info(`${fileName}: ${packageXml}`);
 	const packageXmlPath = path.join(featurePath, fileName);
 	console.log('package.xml has been written to:', packageXmlPath);
-	await fsPromises.writeFile(packageXmlPath, packageXml);
+	await fsPromises.writeFile(packageXmlPath, packageXml); */
 };
 
 const hasPendingChanges = async (): Promise<boolean> => {
@@ -274,48 +313,27 @@ const captureError = (ex: unknown, detailedPrefix?: string) => {
 };
 
 const createInstallationZip = async (featurePath: string): Promise<string> => {
-	// Create the package.xml file
-	await createPackageXml(featurePath);
-
-	// Ensure the dist folder exists
 	const distPath = path.join(featurePath, 'dist');
 	const basename = path.basename(featurePath);
-  const packageXmlPath = path.join(featurePath, 'package.xml');
+	const packageXmlPath = path.join(featurePath, 'package.xml');
 	const installZipPath = path.join(
 		featurePath,
 		'dist',
 		`${basename}-install.zip`,
 	);
 
-  await fsPromises.mkdir(distPath, { recursive: true });
+	// Create the package.xml file
+	await createPackageXml(featurePath);
+
+	// Ensure the dist folder exists
+	await fsPromises.mkdir(distPath, { recursive: true });
 
 	// Zip the contents of the feature folder (including package.xml) and save
 	// it to the dist folder
 	await zipFolder(featurePath, installZipPath);
-	console.log('featurePath', featurePath);
-	console.log(packageXmlPath);
-
-	/* let exists = false;
-	try {
-		await fsPromises.access(path.join(featurePath, 'package.xml'));
-		exists = true;
-	} catch (ex) {
-		exists = false;
-	}
-	console.log('Does file exist?', exists);
 
 	// Remove the temporary package.xml file
-	// await fsPromises.unlink(path.join(featurePath, 'package.xml'));
-	const packageXmlPath = path.join(featurePath, 'package.xml');
-	try {
-		await exec.exec('rm', [packageXmlPath]);
-		console.log(`File removed: ${packageXmlPath}`);
-	} catch (error) {
-		console.error(`Error removing file: ${packageXmlPath}`, error);
-	} */
-
-  await deleteFile(packageXmlPath);
-  console.log('deleted File', packageXmlPath);
+	await deleteFile(packageXmlPath);
 
 	return installZipPath;
 };
@@ -336,28 +354,24 @@ const deleteFile = async (filePath: string): Promise<void> => {
 };
 
 const createUninstallZip = async (featurePath: string): Promise<string> => {
-	// Create the package.xml file
-	await createPackageXml(featurePath, true);
-
-	// Ensure the dist folder exists
-	const distPath = path.join(featurePath, 'dist');
+  const distPath = path.join(featurePath, 'dist');
 	const basename = path.basename(featurePath);
-	await fsPromises.mkdir(distPath, { recursive: true });
-
-	const uninstallZipPath = path.join(
+  const destructiveChangesXmlPath = path.join(featurePath, 'destructiveChanges.xml');
+  const packageXmlPath = path.join(featurePath, 'package.xml');
+  const uninstallZipPath = path.join(
 		featurePath,
 		'dist',
 		`${basename}-uninstall.zip`,
 	);
 
-	// Zip the contents of the feature folder (including package.xml) and save
-	// it to the dist folder
-	/* await zipFolder(
-    featurePath,
-    path.join(featurePath, 'dist', 'install.zip'),
-  ); */
+	// Ensure the dist folder exists
+	await fsPromises.mkdir(distPath, { recursive: true });
 
-	// Create a zip file containing just the package.xml and destructiveChanges.xml files
+	// Create the package.xml and destructiveChanges.xml files
+	await createPackageXml(featurePath, true);
+
+	// Create a zip file containing just the package.xml and
+  // destructiveChanges.xml files
 	const output = fs.createWriteStream(
 		path.join(distPath, `${basename}-uninstall.zip`),
 	);
@@ -365,7 +379,40 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 		zlib: { level: 9 }, // Sets the compression level
 	});
 
-	return new Promise<string>((resolve, reject) => {
+  const zipPromise$ = new Promise<string>((resolve, reject) => {
+		output.on('close', () => {
+			console.log(
+				`Archive created successfully, total bytes: ${archive.pointer()}`,
+			);
+			resolve(uninstallZipPath);
+		});
+
+		archive.on('error', err => {
+			reject(err);
+		});
+
+		archive.pipe(output);
+
+		// Append the package.xml and destructiveChanges.xml files to the archive
+		archive.file(path.join(featurePath, 'package.xml'), {
+			name: 'package.xml',
+		});
+		archive.file(path.join(featurePath, 'destructiveChanges.xml'), {
+			name: 'destructiveChanges.xml',
+		});
+
+		archive.finalize();
+	});
+
+  await zipPromise$;
+
+  // Remove the temporary xml files
+	await deleteFile(packageXmlPath);
+  await deleteFile(destructiveChangesXmlPath);
+
+  return uninstallZipPath;
+
+	/* return new Promise<string>((resolve, reject) => {
 		output.on('close', () => {
 			console.log(
 				`Archive created successfully, total bytes: ${archive.pointer()}`,
@@ -401,7 +448,7 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 		}
 
 		return uninstallZipPath;
-	});
+	}); */
 
 	/* // Remove the temporary xml files
 	await fsPromises.unlink(path.join(featurePath, 'package.xml'));
