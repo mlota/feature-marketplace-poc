@@ -32,6 +32,7 @@ const IGNORED_DIRECTORY_CONTENT = [
 	'dist',
 	'.DS_Store',
 	'package.xml',
+	'destructiveChanges.xml',
 	'info.json',
 ];
 
@@ -163,9 +164,7 @@ const createPackageXmlContent = (
 	return xml;
 };
 
-const createEmptyPackageXmlContent = (
-	version: string,
-): string => {
+const createEmptyPackageXmlContent = (version: string): string => {
 	let xml: string = '';
 	try {
 		const builder = new Builder();
@@ -210,8 +209,11 @@ const createPackageXml = async (
 	destructive = false,
 ): Promise<void> => {
 	const folders = await getSubdirectories(featurePath);
-  const packageXmlPath = path.join(featurePath, 'package.xml');
-  const destructiveChangesXmlPath = path.join(featurePath, 'destructiveChanges.xml');
+	const packageXmlPath = path.join(featurePath, 'package.xml');
+	const destructiveChangesXmlPath = path.join(
+		featurePath,
+		'destructiveChanges.xml',
+	);
 
 	const types: SalesforcePackageXmlType = {};
 	for (const folder of folders) {
@@ -225,7 +227,7 @@ const createPackageXml = async (
 		}
 	}
 
-  if (destructive) {
+	if (destructive) {
 		const emptyPackageXml = createEmptyPackageXmlContent(API_VERSION);
 		await fsPromises.writeFile(packageXmlPath, emptyPackageXml);
 		const destructiveChangesXml = createPackageXmlContent(types);
@@ -354,11 +356,14 @@ const deleteFile = async (filePath: string): Promise<void> => {
 };
 
 const createUninstallZip = async (featurePath: string): Promise<string> => {
-  const distPath = path.join(featurePath, 'dist');
+	const distPath = path.join(featurePath, 'dist');
 	const basename = path.basename(featurePath);
-  const destructiveChangesXmlPath = path.join(featurePath, 'destructiveChanges.xml');
-  const packageXmlPath = path.join(featurePath, 'package.xml');
-  const uninstallZipPath = path.join(
+	const destructiveChangesXmlPath = path.join(
+		featurePath,
+		'destructiveChanges.xml',
+	);
+	const packageXmlPath = path.join(featurePath, 'package.xml');
+	const uninstallZipPath = path.join(
 		featurePath,
 		'dist',
 		`${basename}-uninstall.zip`,
@@ -371,7 +376,7 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 	await createPackageXml(featurePath, true);
 
 	// Create a zip file containing just the package.xml and
-  // destructiveChanges.xml files
+	// destructiveChanges.xml files
 	const output = fs.createWriteStream(
 		path.join(distPath, `${basename}-uninstall.zip`),
 	);
@@ -379,7 +384,7 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 		zlib: { level: 9 }, // Sets the compression level
 	});
 
-  const zipPromise$ = new Promise<string>((resolve, reject) => {
+	const zipPromise$ = new Promise<string>((resolve, reject) => {
 		output.on('close', () => {
 			console.log(
 				`Archive created successfully, total bytes: ${archive.pointer()}`,
@@ -404,13 +409,13 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 		archive.finalize();
 	});
 
-  await zipPromise$;
+	await zipPromise$;
 
-  // Remove the temporary xml files
+	// Remove the temporary xml files
 	await deleteFile(packageXmlPath);
-  await deleteFile(destructiveChangesXmlPath);
+	await deleteFile(destructiveChangesXmlPath);
 
-  return uninstallZipPath;
+	return uninstallZipPath;
 
 	/* return new Promise<string>((resolve, reject) => {
 		output.on('close', () => {

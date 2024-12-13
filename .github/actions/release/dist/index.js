@@ -72,6 +72,7 @@ const IGNORED_DIRECTORY_CONTENT = [
     'dist',
     '.DS_Store',
     'package.xml',
+    'destructiveChanges.xml',
     'info.json',
 ];
 const errors = [];
