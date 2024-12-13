@@ -268,13 +268,15 @@ const captureError = (ex: unknown, detailedPrefix?: string) => {
 	);
 };
 
-const createInstallationZip = async (featurePath: string): Promise<void> => {
+const createInstallationZip = async (featurePath: string): Promise<string> => {
   // Create the package.xml file
   await createPackageXml(featurePath);
 
   // Ensure the dist folder exists
   const distPath = path.join(featurePath, 'dist');
   await fsPromises.mkdir(distPath, { recursive: true });
+
+  const installZipPath = path.join(featurePath, 'dist', 'install.zip');
 
   // Zip the contents of the feature folder (including package.xml) and save
   // it to the dist folder
@@ -303,15 +305,19 @@ const createInstallationZip = async (featurePath: string): Promise<void> => {
   } catch (error) {
     console.error(`Error removing file: ${packageXmlPath}`, error);
   }
+
+  return installZipPath;
 };
 
-const createUninstallZip = async (featurePath: string): Promise<void> => {
+const createUninstallZip = async (featurePath: string): Promise<string> => {
 	// Create the package.xml file
 	await createPackageXml(featurePath, true);
 
 	// Ensure the dist folder exists
 	const distPath = path.join(featurePath, 'dist');
 	await fsPromises.mkdir(distPath, { recursive: true });
+
+  const uninstallZipPath = path.join(featurePath, 'dist', 'uninstall.zip');
 
 	// Zip the contents of the feature folder (including package.xml) and save
 	// it to the dist folder
@@ -326,12 +332,12 @@ const createUninstallZip = async (featurePath: string): Promise<void> => {
 		zlib: { level: 9 }, // Sets the compression level
 	});
 
-	return new Promise<void>((resolve, reject) => {
+	return new Promise<string>((resolve, reject) => {
 		output.on('close', () => {
 			console.log(
 				`Archive created successfully, total bytes: ${archive.pointer()}`,
 			);
-			resolve();
+			resolve(uninstallZipPath);
 		});
 
 		archive.on('error', err => {
@@ -353,13 +359,15 @@ const createUninstallZip = async (featurePath: string): Promise<void> => {
 		// Remove the temporary xml files
 		// await fsPromises.unlink(path.join(featurePath, 'package.xml'));
 		// await fsPromises.unlink(path.join(featurePath, 'destructiveChanges.xml'));
-    const packageXmlPath = path.join(featurePath, 'package.xml');
-    try {
-      await exec.exec('rm', [packageXmlPath]);
-      console.log(`File removed: ${packageXmlPath}`);
-    } catch (error) {
-      console.error(`Error removing file: ${packageXmlPath}`, error);
-    }
+		const packageXmlPath = path.join(featurePath, 'package.xml');
+		try {
+			await exec.exec('rm', [packageXmlPath]);
+			console.log(`File removed: ${packageXmlPath}`);
+		} catch (error) {
+			console.error(`Error removing file: ${packageXmlPath}`, error);
+		}
+
+		return uninstallZipPath;
 	});
 
 	/* // Remove the temporary xml files
@@ -375,6 +383,9 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	const info: IndexData = {
 		features: [],
 	};
+
+  const installZipPaths: string[] = [];
+  const uninstallZipPaths: string[] = [];
 
 	// features.forEach(async folder => {
 	for (const folder of features) {
@@ -412,11 +423,51 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 			path.join(featurePath, 'dist', `${folder}.zip`),
 		); */
 
-    await createInstallationZip(featurePath);
-    await createUninstallZip(featurePath);
+    const installZipPath = await createInstallationZip(featurePath);
+    const uninstallZipPath = await createUninstallZip(featurePath);
+
+    installZipPaths.push(installZipPath);
+    uninstallZipPaths.push(uninstallZipPath);
 	}
 
 	core.info('index.json: ' + JSON.stringify(info, null, 2));
+
+
+
+  const response = await octokit.rest.repos.createRelease({
+		...github.context.repo,
+		tag_name: RELEASE_VERSION,
+		name: RELEASE_VERSION,
+		body: `Automated release for version ${RELEASE_VERSION}`,
+		// body: 'Release created by the Marketplace Release Action',
+	});
+
+	const releaseId = response.data.id;
+	const releaseUrl = response.data.html_url;
+	core.info(`Release created: ${releaseUrl}`);
+	core.info(`Release ID: ${releaseId}`);
+
+  for (const installZipPath of installZipPaths) {
+		const absolutePath = path.resolve(installZipPath);
+		const fileName = path.basename(absolutePath);
+		const fileData = await fsPromises.readFile(absolutePath, 'utf8');
+
+		console.log(`Attaching file: ${fileName}`);
+		await octokit.rest.repos.uploadReleaseAsset({
+			owner: github.context.repo.owner,
+			repo: github.context.repo.repo,
+			release_id: releaseId,
+			name: fileName,
+			data: fileData,
+			headers: {
+				'content-type': 'application/zip',
+				'content-length': fileData.length,
+			},
+		});
+	}
+
+
+
 
 	// Write the updated index.json file
 	await fsPromises.writeFile(indexFile, JSON.stringify(info, null, 2));
@@ -446,17 +497,4 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	if (errors.length) {
 		core.setFailed(errors.join('\n'));
 	}
-
-  const response = await octokit.rest.repos.createRelease({
-    ...github.context.repo,
-    tag_name: RELEASE_VERSION,
-    name: `Release ${RELEASE_VERSION}`,
-    body: `Automated release for version ${RELEASE_VERSION}`,
-    // body: 'Release created by the Marketplace Release Action',
-  });
-
-  const releaseId = response.data.id;
-  const releaseUrl = response.data.html_url;
-  core.info(`Release created: ${releaseUrl}`);
-  core.info(`Release ID: ${releaseId}`);
 })();

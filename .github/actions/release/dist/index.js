@@ -264,6 +264,7 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     // Ensure the dist folder exists
     const distPath = path.join(featurePath, 'dist');
     yield fs_1.promises.mkdir(distPath, { recursive: true });
+    const installZipPath = path.join(featurePath, 'dist', 'install.zip');
     // Zip the contents of the feature folder (including package.xml) and save
     // it to the dist folder
     yield zipFolder(featurePath, path.join(featurePath, 'dist', 'install.zip'));
@@ -288,6 +289,7 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     catch (error) {
         console.error(`Error removing file: ${packageXmlPath}`, error);
     }
+    return installZipPath;
 });
 const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
     // Create the package.xml file
@@ -295,6 +297,7 @@ const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, fu
     // Ensure the dist folder exists
     const distPath = path.join(featurePath, 'dist');
     yield fs_1.promises.mkdir(distPath, { recursive: true });
+    const uninstallZipPath = path.join(featurePath, 'dist', 'uninstall.zip');
     // Zip the contents of the feature folder (including package.xml) and save
     // it to the dist folder
     /* await zipFolder(
@@ -309,7 +312,7 @@ const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, fu
     return new Promise((resolve, reject) => {
         output.on('close', () => {
             console.log(`Archive created successfully, total bytes: ${archive.pointer()}`);
-            resolve();
+            resolve(uninstallZipPath);
         });
         archive.on('error', err => {
             reject(err);
@@ -335,6 +338,7 @@ const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, fu
         catch (error) {
             console.error(`Error removing file: ${packageXmlPath}`, error);
         }
+        return uninstallZipPath;
     }));
     /* // Remove the temporary xml files
     await fsPromises.unlink(path.join(featurePath, 'package.xml'));
@@ -347,6 +351,8 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     const info = {
         features: [],
     };
+    const installZipPaths = [];
+    const uninstallZipPaths = [];
     // features.forEach(async folder => {
     for (const folder of features) {
         const featurePath = path.join(contentDir, folder);
@@ -375,10 +381,34 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
             featurePath,
             path.join(featurePath, 'dist', `${folder}.zip`),
         ); */
-        yield createInstallationZip(featurePath);
-        yield createUninstallZip(featurePath);
+        const installZipPath = yield createInstallationZip(featurePath);
+        const uninstallZipPath = yield createUninstallZip(featurePath);
+        installZipPaths.push(installZipPath);
+        uninstallZipPaths.push(uninstallZipPath);
     }
     core.info('index.json: ' + JSON.stringify(info, null, 2));
+    const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, github.context.repo), { tag_name: RELEASE_VERSION, name: RELEASE_VERSION, body: `Automated release for version ${RELEASE_VERSION}` }));
+    const releaseId = response.data.id;
+    const releaseUrl = response.data.html_url;
+    core.info(`Release created: ${releaseUrl}`);
+    core.info(`Release ID: ${releaseId}`);
+    for (const installZipPath of installZipPaths) {
+        const absolutePath = path.resolve(installZipPath);
+        const fileName = path.basename(absolutePath);
+        const fileData = yield fs_1.promises.readFile(absolutePath, 'utf8');
+        console.log(`Attaching file: ${fileName}`);
+        yield octokit.rest.repos.uploadReleaseAsset({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            release_id: releaseId,
+            name: fileName,
+            data: fileData,
+            headers: {
+                'content-type': 'application/zip',
+                'content-length': fileData.length,
+            },
+        });
+    }
     // Write the updated index.json file
     yield fs_1.promises.writeFile(indexFile, JSON.stringify(info, null, 2));
     const hasChanges = yield hasPendingChanges();
@@ -405,9 +435,4 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     if (errors.length) {
         core.setFailed(errors.join('\n'));
     }
-    const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, github.context.repo), { tag_name: RELEASE_VERSION, name: `Release ${RELEASE_VERSION}`, body: `Automated release for version ${RELEASE_VERSION}` }));
-    const releaseId = response.data.id;
-    const releaseUrl = response.data.html_url;
-    core.info(`Release created: ${releaseUrl}`);
-    core.info(`Release ID: ${releaseId}`);
 }))();
