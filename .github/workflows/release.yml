@@ -23,16 +23,25 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Get latest tag
-        id: latest-tag
-        uses: actions-ecosystem/action-get-latest-tag@v1
-
-      - name: Bump release version
-        id: bump-version
-        uses: actions-ecosystem/action-bump-semver@v1
+      - name: Get latest tag and calculate next version
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
         with:
-          current_version: ${{ steps.latest-tag.outputs.tag }}
-          level: patch
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: main
+          custom_tag: 'v{{version}}'
+          default_bump: patch
+
+      # - name: Get latest tag
+      #   id: latest-tag
+      #   uses: actions-ecosystem/action-get-latest-tag@v1
+
+      # - name: Bump release version
+      #   id: bump-version
+      #   uses: actions-ecosystem/action-bump-semver@v1
+      #   with:
+      #     current_version: ${{ steps.latest-tag.outputs.tag }}
+      #     level: patch
 
       # - name: Get latest tag
       #   continue-on-error: true
@@ -72,5 +81,5 @@ jobs:
         env:
           GITHUB_WORKSPACE: '${{ github.workspace }}'
         with:
-          release-version: ${{ steps.bump-version.outputs.new_version }}
+          release-version: ${{ steps.tag_version.outputs.new_tag }}
           # release-version: ${{ env.new_version }}
