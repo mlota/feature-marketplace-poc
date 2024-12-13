@@ -72,5 +72,5 @@ jobs:
         env:
           GITHUB_WORKSPACE: '${{ github.workspace }}'
         with:
-          release-version: ${{ steps.bump_version.outputs.new_version }}
+          release-version: ${{ steps.bump-version.outputs.new_version }}
           # release-version: ${{ env.new_version }}
