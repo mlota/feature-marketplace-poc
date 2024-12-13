@@ -27,7 +27,7 @@ jobs:
         id: release-version
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'main'
+          branch: 'main/v1'
 
       - run: echo ${{ steps.release-version.outputs.next-version }} # Output: 1.1.2
       - run: echo ${{ steps.release-version.outputs.next-version-name }} # Output: v1.1.2
