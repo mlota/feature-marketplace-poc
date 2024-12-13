@@ -47,6 +47,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
 const exec = __importStar(require("@actions/exec"));
+const github = __importStar(require("@actions/github"));
 const archiver_1 = __importDefault(require("archiver"));
 const fs = __importStar(require("fs"));
 const fs_1 = require("fs");
@@ -71,6 +72,7 @@ const IGNORED_DIRECTORY_CONTENT = [
     'info.json',
 ];
 const errors = [];
+const octokit = github.getOctokit(GITHUB_TOKEN);
 /**
  * Read all files from the given folders and their subfolders using fs.readdir's
  * recursive option.
@@ -401,4 +403,9 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     if (errors.length) {
         core.setFailed(errors.join('\n'));
     }
+    const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, github.context.repo), { tag_name: TAG_NAME, name: RELEASE_NAME, body: 'Release created by the Marketplace Release Action' }));
+    const releaseId = response.data.id;
+    const releaseUrl = response.data.html_url;
+    core.info(`Release created: ${releaseUrl}`);
+    core.info(`Release ID: ${releaseId}`);
 }))();

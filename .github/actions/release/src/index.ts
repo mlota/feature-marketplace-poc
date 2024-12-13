@@ -33,6 +33,7 @@ const IGNORED_DIRECTORY_CONTENT = [
 ];
 
 const errors: string[] = [];
+const octokit = github.getOctokit(GITHUB_TOKEN);
 
 /**
  * Read all files from the given folders and their subfolders using fs.readdir's
@@ -443,4 +444,16 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	if (errors.length) {
 		core.setFailed(errors.join('\n'));
 	}
+
+  const response = await octokit.rest.repos.createRelease({
+    ...github.context.repo,
+    tag_name: TAG_NAME,
+    name: RELEASE_NAME,
+    body: 'Release created by the Marketplace Release Action',
+  });
+
+  const releaseId = response.data.id;
+  const releaseUrl = response.data.html_url;
+  core.info(`Release created: ${releaseUrl}`);
+  core.info(`Release ID: ${releaseId}`);
 })();
