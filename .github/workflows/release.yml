@@ -23,16 +23,6 @@ jobs:
         with:
           node-version: '20'
 
-      - uses: wemogy/next-release-version-action@1.0.1
-        id: release-version
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'main/v1'
-
-      - run: echo ${{ steps.release-version.outputs.next-version }} # Output: 1.1.2
-      - run: echo ${{ steps.release-version.outputs.next-version-name }} # Output: v1.1.2
-      - run: echo ${{ steps.release-version.outputs.folder }} # Output: <empty>
-
       - name: Get latest tag
         continue-on-error: true
         id: get_latest_tag
