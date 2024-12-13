@@ -389,6 +389,18 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 	return uninstallZipPath;
 };
 
+const createZipFileRequestUrl = (
+	owner: string,
+	repo: string,
+	feature: string,
+	uninstall = false,
+) => {
+	const zipFile = uninstall
+		? `${feature}-uninstall.zip`
+		: `${feature}-install.zip`;
+	return `https://api.github.com/repos/${owner}/${repo}/contents/content/${feature}/dist/${zipFile}`;
+};
+
 const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	// Get a list of each of the child folders under features
 	const features = await fsPromises.readdir(contentDir);
@@ -401,9 +413,7 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	// Get the owner and repo from the context
 	const { owner, repo } = github.context.repo;
 
-	const tempPath = `https://api.github.com/repos/${owner}/${repo}/contents/${contentDir}`;
-	core.info(tempPath);
-
+	// Optionally keeping track of created zip files for later use
 	const installZipPaths: string[] = [];
 	const uninstallZipPaths: string[] = [];
 
@@ -433,8 +443,8 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 			files: parseFilePaths(files).map(file =>
 				path.relative(featurePath, file),
 			),
-			installZipFilePath: installZipPath,
-			uninstallZipFilePath: uninstallZipPath,
+			installZipFilePath: createZipFileRequestUrl(owner, repo, folder),
+			uninstallZipFilePath: createZipFileRequestUrl(owner, repo, folder, true),
 		});
 	}
 
