@@ -449,9 +449,10 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 
   const response = await octokit.rest.repos.createRelease({
     ...github.context.repo,
-    tag_name: TAG_NAME,
-    name: RELEASE_NAME,
-    body: 'Release created by the Marketplace Release Action',
+    tag_name: RELEASE_VERSION,
+    name: `Release ${RELEASE_VERSION}`,
+    body: `Automated release for version ${RELEASE_VERSION}`,
+    // body: 'Release created by the Marketplace Release Action',
   });
 
   const releaseId = response.data.id;

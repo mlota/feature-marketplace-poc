@@ -405,7 +405,7 @@ const run = (contentDir, indexFile) => __awaiter(void 0, void 0, void 0, functio
     if (errors.length) {
         core.setFailed(errors.join('\n'));
     }
-    const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, github.context.repo), { tag_name: TAG_NAME, name: RELEASE_NAME, body: 'Release created by the Marketplace Release Action' }));
+    const response = yield octokit.rest.repos.createRelease(Object.assign(Object.assign({}, github.context.repo), { tag_name: RELEASE_VERSION, name: `Release ${RELEASE_VERSION}`, body: `Automated release for version ${RELEASE_VERSION}` }));
     const releaseId = response.data.id;
     const releaseUrl = response.data.html_url;
     core.info(`Release created: ${releaseUrl}`);
