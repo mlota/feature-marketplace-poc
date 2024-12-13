@@ -59,7 +59,9 @@ const API_VERSION = core.getInput('api-version');
 const GITHUB_TOKEN = core.getInput('github-token', { required: true });
 const TAG_NAME = core.getInput('tag-name', { required: true });
 const RELEASE_NAME = core.getInput('release-name', { required: true });
-const RELEASE_VERSION = core.getInput('release-version', { required: true });
+const RELEASE_VERSION = core.getInput('release-version', {
+    required: true,
+});
 // Environment variables
 const GITHUB_TRIGGERING_ACTOR = process.env.GITHUB_TRIGGERING_ACTOR;
 const GITHUB_ACTOR = process.env.GITHUB_ACTOR;
@@ -264,33 +266,50 @@ const createInstallationZip = (featurePath) => __awaiter(void 0, void 0, void 0,
     // Ensure the dist folder exists
     const distPath = path.join(featurePath, 'dist');
     const basename = path.basename(featurePath);
-    yield fs_1.promises.mkdir(distPath, { recursive: true });
+    const packageXmlPath = path.join(featurePath, 'package.xml');
     const installZipPath = path.join(featurePath, 'dist', `${basename}-install.zip`);
+    yield fs_1.promises.mkdir(distPath, { recursive: true });
     // Zip the contents of the feature folder (including package.xml) and save
     // it to the dist folder
-    yield zipFolder(featurePath, path.join(featurePath, 'dist', `${basename}-install.zip`));
+    yield zipFolder(featurePath, installZipPath);
     console.log('featurePath', featurePath);
-    console.log(path.join(featurePath, 'package.xml'));
-    let exists = false;
+    console.log(packageXmlPath);
+    /* let exists = false;
     try {
-        yield fs_1.promises.access(path.join(featurePath, 'package.xml'));
+        await fsPromises.access(path.join(featurePath, 'package.xml'));
         exists = true;
-    }
-    catch (ex) {
+    } catch (ex) {
         exists = false;
     }
     console.log('Does file exist?', exists);
+
     // Remove the temporary package.xml file
     // await fsPromises.unlink(path.join(featurePath, 'package.xml'));
     const packageXmlPath = path.join(featurePath, 'package.xml');
     try {
-        yield exec.exec('rm', [packageXmlPath]);
+        await exec.exec('rm', [packageXmlPath]);
         console.log(`File removed: ${packageXmlPath}`);
+    } catch (error) {
+        console.error(`Error removing file: ${packageXmlPath}`, error);
+    } */
+    yield deleteFile(packageXmlPath);
+    console.log('deleted File', packageXmlPath);
+    return installZipPath;
+});
+const fileExists = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
+    return fs.promises
+        .access(filePath, fs.constants.F_OK)
+        .then(() => true)
+        .catch(() => false);
+});
+const deleteFile = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield exec.exec('rm', [filePath]);
+        core.info(`File removed: ${filePath}`);
     }
     catch (error) {
-        console.error(`Error removing file: ${packageXmlPath}`, error);
+        captureError(error, `Error removing file: ${filePath}`);
     }
-    return installZipPath;
 });
 const createUninstallZip = (featurePath) => __awaiter(void 0, void 0, void 0, function* () {
     // Create the package.xml file

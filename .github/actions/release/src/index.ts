@@ -17,7 +17,9 @@ const API_VERSION = core.getInput('api-version');
 const GITHUB_TOKEN: string = core.getInput('github-token', { required: true });
 const TAG_NAME: string = core.getInput('tag-name', { required: true });
 const RELEASE_NAME: string = core.getInput('release-name', { required: true });
-const RELEASE_VERSION: string = core.getInput('release-version', { required: true });
+const RELEASE_VERSION: string = core.getInput('release-version', {
+	required: true,
+});
 
 // Environment variables
 const GITHUB_TRIGGERING_ACTOR: string = process.env.GITHUB_TRIGGERING_ACTOR!;
@@ -179,7 +181,10 @@ const createPackageXmlContent = (
 	return Promise.resolve(createPackageXmlContent(types, '62.0'));
 }; */
 
-const createPackageXml = async (featurePath: string, destructive = false): Promise<void> => {
+const createPackageXml = async (
+	featurePath: string,
+	destructive = false,
+): Promise<void> => {
 	const folders = await getSubdirectories(featurePath);
 
 	const types: SalesforcePackageXmlType = {};
@@ -194,16 +199,16 @@ const createPackageXml = async (featurePath: string, destructive = false): Promi
 		}
 	}
 
-  const packageXml = createPackageXmlContent(
+	const packageXml = createPackageXmlContent(
 		types,
 		!destructive ? API_VERSION : undefined,
 	);
 
-  const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
-  core.info(`${fileName}: ${packageXml}`);
-  const packageXmlPath = path.join(featurePath, fileName);
-  console.log('package.xml has been written to:', packageXmlPath);
-  await fsPromises.writeFile(packageXmlPath, packageXml);
+	const fileName = destructive ? 'destructiveChanges.xml' : 'package.xml';
+	core.info(`${fileName}: ${packageXml}`);
+	const packageXmlPath = path.join(featurePath, fileName);
+	console.log('package.xml has been written to:', packageXmlPath);
+	await fsPromises.writeFile(packageXmlPath, packageXml);
 };
 
 const hasPendingChanges = async (): Promise<boolean> => {
@@ -269,45 +274,65 @@ const captureError = (ex: unknown, detailedPrefix?: string) => {
 };
 
 const createInstallationZip = async (featurePath: string): Promise<string> => {
-  // Create the package.xml file
-  await createPackageXml(featurePath);
+	// Create the package.xml file
+	await createPackageXml(featurePath);
 
-  // Ensure the dist folder exists
-  const distPath = path.join(featurePath, 'dist');
-  const basename = path.basename(featurePath);
+	// Ensure the dist folder exists
+	const distPath = path.join(featurePath, 'dist');
+	const basename = path.basename(featurePath);
+  const packageXmlPath = path.join(featurePath, 'package.xml');
+	const installZipPath = path.join(
+		featurePath,
+		'dist',
+		`${basename}-install.zip`,
+	);
+
   await fsPromises.mkdir(distPath, { recursive: true });
 
-  const installZipPath = path.join(featurePath, 'dist', `${basename}-install.zip`);
+	// Zip the contents of the feature folder (including package.xml) and save
+	// it to the dist folder
+	await zipFolder(featurePath, installZipPath);
+	console.log('featurePath', featurePath);
+	console.log(packageXmlPath);
 
-  // Zip the contents of the feature folder (including package.xml) and save
-  // it to the dist folder
-  await zipFolder(
-    featurePath,
-    path.join(featurePath, 'dist', `${basename}-install.zip`),
-  );
-  console.log('featurePath', featurePath);
-  console.log(path.join(featurePath, 'package.xml'));
+	/* let exists = false;
+	try {
+		await fsPromises.access(path.join(featurePath, 'package.xml'));
+		exists = true;
+	} catch (ex) {
+		exists = false;
+	}
+	console.log('Does file exist?', exists);
 
-  let exists = false;
-  try {
-    await fsPromises.access(path.join(featurePath, 'package.xml'));
-    exists = true;
-  } catch (ex) {
-    exists = false;
-  }
-  console.log('Does file exist?', exists);
+	// Remove the temporary package.xml file
+	// await fsPromises.unlink(path.join(featurePath, 'package.xml'));
+	const packageXmlPath = path.join(featurePath, 'package.xml');
+	try {
+		await exec.exec('rm', [packageXmlPath]);
+		console.log(`File removed: ${packageXmlPath}`);
+	} catch (error) {
+		console.error(`Error removing file: ${packageXmlPath}`, error);
+	} */
 
-  // Remove the temporary package.xml file
-  // await fsPromises.unlink(path.join(featurePath, 'package.xml'));
-  const packageXmlPath = path.join(featurePath, 'package.xml');
-  try {
-    await exec.exec('rm', [packageXmlPath]);
-    console.log(`File removed: ${packageXmlPath}`);
-  } catch (error) {
-    console.error(`Error removing file: ${packageXmlPath}`, error);
-  }
+  await deleteFile(packageXmlPath);
+  console.log('deleted File', packageXmlPath);
 
-  return installZipPath;
+	return installZipPath;
+};
+
+const fileExists = async (filePath: string): Promise<boolean> =>
+	fs.promises
+		.access(filePath, fs.constants.F_OK)
+		.then(() => true)
+		.catch(() => false);
+
+const deleteFile = async (filePath: string): Promise<void> => {
+	try {
+		await exec.exec('rm', [filePath]);
+		core.info(`File removed: ${filePath}`);
+	} catch (error) {
+		captureError(error, `Error removing file: ${filePath}`);
+	}
 };
 
 const createUninstallZip = async (featurePath: string): Promise<string> => {
@@ -316,10 +341,14 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
 
 	// Ensure the dist folder exists
 	const distPath = path.join(featurePath, 'dist');
-  const basename = path.basename(featurePath);
+	const basename = path.basename(featurePath);
 	await fsPromises.mkdir(distPath, { recursive: true });
 
-  const uninstallZipPath = path.join(featurePath, 'dist', `${basename}-uninstall.zip`);
+	const uninstallZipPath = path.join(
+		featurePath,
+		'dist',
+		`${basename}-uninstall.zip`,
+	);
 
 	// Zip the contents of the feature folder (including package.xml) and save
 	// it to the dist folder
@@ -329,7 +358,9 @@ const createUninstallZip = async (featurePath: string): Promise<string> => {
   ); */
 
 	// Create a zip file containing just the package.xml and destructiveChanges.xml files
-	const output = fs.createWriteStream(path.join(distPath, `${basename}-uninstall.zip`));
+	const output = fs.createWriteStream(
+		path.join(distPath, `${basename}-uninstall.zip`),
+	);
 	const archive = archiver('zip', {
 		zlib: { level: 9 }, // Sets the compression level
 	});
@@ -386,8 +417,8 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 		features: [],
 	};
 
-  const installZipPaths: string[] = [];
-  const uninstallZipPaths: string[] = [];
+	const installZipPaths: string[] = [];
+	const uninstallZipPaths: string[] = [];
 
 	// features.forEach(async folder => {
 	for (const folder of features) {
@@ -425,18 +456,16 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 			path.join(featurePath, 'dist', `${folder}.zip`),
 		); */
 
-    const installZipPath = await createInstallationZip(featurePath);
-    const uninstallZipPath = await createUninstallZip(featurePath);
+		const installZipPath = await createInstallationZip(featurePath);
+		const uninstallZipPath = await createUninstallZip(featurePath);
 
-    installZipPaths.push(installZipPath);
-    uninstallZipPaths.push(uninstallZipPath);
+		installZipPaths.push(installZipPath);
+		uninstallZipPaths.push(uninstallZipPath);
 	}
 
 	core.info('index.json: ' + JSON.stringify(info, null, 2));
 
-
-
-  const response = await octokit.rest.repos.createRelease({
+	const response = await octokit.rest.repos.createRelease({
 		...github.context.repo,
 		tag_name: RELEASE_VERSION,
 		name: RELEASE_VERSION,
@@ -449,7 +478,7 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 	core.info(`Release created: ${releaseUrl}`);
 	core.info(`Release ID: ${releaseId}`);
 
-  for (const installZipPath of installZipPaths) {
+	for (const installZipPath of installZipPaths) {
 		const absolutePath = path.resolve(installZipPath);
 		const fileName = path.basename(absolutePath);
 		const fileData = await fsPromises.readFile(absolutePath, 'utf8');
@@ -464,9 +493,6 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 		});
 	}
 
-
-
-
 	// Write the updated index.json file
 	await fsPromises.writeFile(indexFile, JSON.stringify(info, null, 2));
 
@@ -480,16 +506,16 @@ const run = async (contentDir: string, indexFile: string): Promise<void> => {
 };
 
 (async () => {
-  core.info('GITHUB_TRIGGERING_ACTOR: ' + GITHUB_TRIGGERING_ACTOR);
-  core.info('GITHUB_ACTOR: ' + GITHUB_ACTOR);
-  core.info('GITHUB_WORKSPACE: ' + GITHUB_WORKSPACE);
-  core.info('INDEX_FILE: ' + INDEX_FILE);
-  core.info('CONTENT_DIR: ' + CONTENT_DIR);
-  core.info('API_VERSION: ' + API_VERSION);
-  core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
-  core.info('TAG_NAME: ' + TAG_NAME);
-  core.info('RELEASE_NAME: ' + RELEASE_NAME);
-  core.info('RELEASE_VERSION: ' + RELEASE_VERSION);
+	core.info('GITHUB_TRIGGERING_ACTOR: ' + GITHUB_TRIGGERING_ACTOR);
+	core.info('GITHUB_ACTOR: ' + GITHUB_ACTOR);
+	core.info('GITHUB_WORKSPACE: ' + GITHUB_WORKSPACE);
+	core.info('INDEX_FILE: ' + INDEX_FILE);
+	core.info('CONTENT_DIR: ' + CONTENT_DIR);
+	core.info('API_VERSION: ' + API_VERSION);
+	core.info('GITHUB_TOKEN: ' + GITHUB_TOKEN);
+	core.info('TAG_NAME: ' + TAG_NAME);
+	core.info('RELEASE_NAME: ' + RELEASE_NAME);
+	core.info('RELEASE_VERSION: ' + RELEASE_VERSION);
 
 	await run(CONTENT_DIR, INDEX_FILE);
 	if (errors.length) {
