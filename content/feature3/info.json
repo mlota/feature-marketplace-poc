@@ -1,7 +1,7 @@
 {
-	"id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
 	"name": "feature3",
 	"label": "Feature 3",
-	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-	"version": "1.0.0"
+	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+	"version": "1.0.0",
+	"iconUrl": ""
 }
