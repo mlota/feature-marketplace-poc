@@ -2,6 +2,6 @@
 	"name": "feature1",
 	"label": "Feature 1",
 	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-	"version": "1.0.0",
-	"iconUrl": ""
+	"iconUrl": "",
+	"dependencies": ["feature3"]
 }
