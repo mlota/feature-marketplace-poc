@@ -15,8 +15,6 @@ jobs:
     name: Build Release
     permissions:
       contents: write
-    env:
-      SF_DISABLE_TELEMETRY: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,5 +36,6 @@ jobs:
         uses: cloudcoach-actions/marketplace-release@v1
         env:
           GITHUB_WORKSPACE: "${{ github.workspace }}"
+          SF_DISABLE_TELEMETRY: true
         with:
           release-version: ${{ steps.tag_version.outputs.new_tag }}
