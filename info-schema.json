@@ -1,0 +1,38 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Marketplace Feature Definition",
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "The unique name of the feature. Should be camel cased and may contain numbers e.g. 'sampleFeature1'.",
+			"pattern": "^[a-z]+([A-Z0-9][a-z0-9]*)*$"
+		},
+		"label": {
+			"type": "string",
+			"description": "The user friendly label of the feature. This will be used anywhere the feature is displayed in the Marketplace UI."
+		},
+		"description": {
+			"type": "string",
+			"description": "A description of the functionality that the feature provides."
+		},
+		"iconUrl": {
+			"type": "string",
+			"format": "uri",
+			"description": "An optional absolute url to an image icon that will be displayed alongside the feature in the Marketplace UI. Note: The optimal size is 32x32 pixels."
+		},
+		"dependencies": {
+			"type": "array",
+			"description": "An optional list of features within the same repository that this feature is dependent upon. Installing this feature will cause dependencies to be installed also.",
+			"items": {
+				"type": "string"
+			}
+		},
+		"availability": {
+			"type": "string",
+			"description": "Defines the general availability of the feature within the marketplace. If unspecified, the feature will default to being publicly available. If set to 'dependency', the feature will be hidden in the marketplace and only available as a dependency of other features",
+			"enum": ["public", "dependency"]
+		}
+	},
+	"required": ["name", "label"]
+}
