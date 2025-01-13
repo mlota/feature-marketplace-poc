@@ -1,6 +1,6 @@
 {
+  "$schema": "../../info-schema.json",
 	"name": "feature2",
 	"label": "Feature 2",
-	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-	"iconUrl": ""
+	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 }
