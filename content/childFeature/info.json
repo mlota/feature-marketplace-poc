@@ -1,0 +1,7 @@
+{
+	"$schema": "../../info-schema.json",
+	"name": "childFeature",
+	"label": "Child Feature",
+	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+	"dependencies": ["parentFeature", "helperLib"]
+}
