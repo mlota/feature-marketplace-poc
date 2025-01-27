@@ -1,6 +1,6 @@
 {
 	"$schema": "../../../schemas/info-schema.json",
-	"name": "featureB",
 	"label": "Feature B",
-	"description": "Assign, prioritize, and track tasks with an intuitive drag-and-drop interface. Keep your team aligned with instant status updates."
+	"description": "Assign, prioritize, and track tasks with an intuitive drag-and-drop interface. Keep your team aligned with instant status updates.",
+	"tags": ["project-management", "customer-success"]
 }
