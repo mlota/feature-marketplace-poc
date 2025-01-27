@@ -1,0 +1,6 @@
+{
+	"paths": {
+		"packages": "src/packages",
+		"bundles": "src/bundles"
+	}
+}
