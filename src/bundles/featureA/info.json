@@ -1,6 +1,7 @@
 {
 	"$schema": "../../../schemas/info-schema.json",
-	"name": "feature1",
-	"label": "Feature 1",
-	"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+	"name": "featureA",
+	"label": "Feature A",
+	"description": "Log hours directly into your projects to track time and budget effortlessly. Visualize team productivity with detailed reports.",
+	"packageDependencies": ["project_cloud"]
 }
