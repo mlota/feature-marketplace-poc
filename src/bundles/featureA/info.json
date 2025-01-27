@@ -1,6 +1,6 @@
 {
 	"$schema": "../../../schemas/info-schema.json",
-	"label": "Feature A",
+	"name": "Feature A",
 	"description": "Log hours directly into your projects to track time and budget effortlessly. Visualize team productivity with detailed reports.",
 	"packageDependencies": ["project_cloud"],
 	"tags": ["project-management"]
