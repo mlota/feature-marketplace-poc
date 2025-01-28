@@ -1,10 +1,10 @@
 [
 	{
-		"name": "Cloud Coach",
+		"name": "CloudCoach Enterprise",
 		"namespace": "project_cloud",
-		"packageId": "...",
+		"packageId": "04t2K000000cfI6QAI",
 		"versionId": "....",
 		"description": "xyz",
-		"version": "1.0.0"
+		"version": "21.2"
 	}
 ]
