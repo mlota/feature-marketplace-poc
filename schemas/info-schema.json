@@ -5,12 +5,7 @@
 	"properties": {
 		"name": {
 			"type": "string",
-			"description": "The unique name of the feature. Should be camel cased and may contain numbers e.g. 'sampleFeature1'.",
-			"pattern": "^[a-z]+([A-Z0-9][a-z0-9]*)*$"
-		},
-		"label": {
-			"type": "string",
-			"description": "The user friendly label of the feature. This will be used anywhere the feature is displayed in the Marketplace UI."
+			"description": "The user friendly name of the feature. This will be used anywhere the feature is displayed in the Marketplace UI."
 		},
 		"description": {
 			"type": "string",
@@ -35,11 +30,18 @@
 				"type": "string"
 			}
 		},
+    "tags": {
+			"type": "array",
+			"description": "An optional list of tags for this feature. These tags will be used to categorize the feature in the Marketplace UI.",
+			"items": {
+				"type": "string"
+			}
+		},
 		"availability": {
 			"type": "string",
 			"description": "Defines the general availability of the feature within the marketplace. If unspecified, the feature will default to being publicly available. If set to 'dependency', the feature will be hidden in the marketplace and only available as a dependency of other features",
 			"enum": ["public", "dependency"]
 		}
 	},
-	"required": ["name", "label"]
+	"required": ["name", "availability"]
 }

@@ -1,0 +1,6 @@
+{
+	"$schema": "../../../schemas/info-schema.json",
+	"name": "Helper Lib A",
+	"description": "Contains a set of Cloud Coach Helper methods for Apex.",
+	"availability": "dependency"
+}

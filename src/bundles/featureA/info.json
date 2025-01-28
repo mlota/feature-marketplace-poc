@@ -2,6 +2,7 @@
 	"$schema": "../../../schemas/info-schema.json",
 	"name": "Feature A",
 	"description": "Log hours directly into your projects to track time and budget effortlessly. Visualize team productivity with detailed reports.",
+  "dependencies": ["helperLibA", "helperLibB"],
 	"packageDependencies": ["project_cloud"],
 	"tags": ["project-management"]
 }
